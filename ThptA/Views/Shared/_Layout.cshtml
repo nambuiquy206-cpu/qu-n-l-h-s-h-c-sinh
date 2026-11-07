@@ -28,6 +28,30 @@
                     </ul>
                 </div>
             </div>
+
+            @if (User.Identity?.IsAuthenticated == true)
+            {
+                <div class="d-flex align-items-center gap-3">
+                    <span>Xin chào, @User.Identity.Name</span>
+
+                    <form asp-controller="Account"
+                          asp-action="Logout"
+                          method="post">
+                        <button type="submit"
+                                class="btn btn-outline-danger">
+                            Đăng xuất
+                        </button>
+                    </form>
+                </div>
+            }
+            else
+            {
+                <a asp-controller="Account"
+                   asp-action="Login"
+                   class="btn btn-primary">
+                    Đăng nhập
+                </a>
+            }
         </nav>
     </header>
     <div class="container">

@@ -1,4 +1,5 @@
 
+using ThptA.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using ThptA.Data;
@@ -52,6 +53,19 @@ builder.Services.ConfigureApplicationCookie(options =>
 });
 
 var app = builder.Build();
+
+if (args.Contains("--seed"))
+{
+    using var scope = app.Services.CreateScope();
+
+    await IdentitySeeder.SeedAsync(
+        scope.ServiceProvider);
+
+    Console.WriteLine("Khoi tao Admin thanh cong.");
+
+    return;
+}
+
 
 // 5. Xử lý lỗi hệ thống
 if (!app.Environment.IsDevelopment())
