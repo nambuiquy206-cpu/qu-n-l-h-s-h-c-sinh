@@ -158,19 +158,34 @@ namespace ThptA.Controllers
             // 10. Đếm kết quả và phân trang
             int total = await query.CountAsync();
 
+            int activeCount = await query.CountAsync(
+                s => s.Status == "Active");
+
+            int inactiveCount = await query.CountAsync(
+                s => s.Status == "Inactive");
+
+            int missingContactCount = await query.CountAsync(
+                s => s.PrimaryContact == null ||
+                     s.PrimaryContact.Phone == null ||
+                     s.PrimaryContact.Phone.Trim() == "");
+
+
             int pageCount = Math.Max(
                 1,
                 (int)Math.Ceiling(total / (double)pageSize));
 
             page = Math.Min(page, pageCount);
 
+
             var students = await query
                 .Include(s => s.SchoolClass)
                     .ThenInclude(c => c!.AcademicYear)
+                .Include(s => s.PrimaryContact)
                 .OrderBy(s => s.Code)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
                 .ToListAsync();
+
 
             // 11. Trả dữ liệu ra giao diện
             var model = new StudentListVm
@@ -185,7 +200,12 @@ namespace ThptA.Controllers
                 ClassOptions = classes,
                 Page = page,
                 PageCount = pageCount,
-                Total = total
+
+                Total = total,
+                ActiveCount = activeCount,
+                InactiveCount = inactiveCount,
+                MissingContactCount = missingContactCount
+
             };
 
             return View(model);

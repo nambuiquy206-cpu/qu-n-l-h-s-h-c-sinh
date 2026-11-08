@@ -26,5 +26,10 @@ namespace ThptA.ViewModels
         public int Page { get; set; } = 1;
         public int PageCount { get; set; } = 1;
         public int Total { get; set; }
+
+        public int ActiveCount { get; set; }
+        public int InactiveCount { get; set; }
+        public int MissingContactCount { get; set; }
+
     }
 }

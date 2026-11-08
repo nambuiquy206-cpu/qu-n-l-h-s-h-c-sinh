@@ -118,6 +118,51 @@
         </div>
     </div>
 
+    <!-- THỐNG KÊ NHANH -->
+    <div class="row g-3 mb-4">
+
+        <div class="col-md-3">
+            <div class="card border-primary">
+                <div class="card-body">
+                    <h6>Tổng hồ sơ</h6>
+                    <h2 class="text-primary">@Model.Total</h2>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card border-success">
+                <div class="card-body">
+                    <h6>Đang học</h6>
+                    <h2 class="text-success">
+                        @Model.ActiveCount
+                    </h2>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card border-secondary">
+                <div class="card-body">
+                    <h6>Ngừng học</h6>
+                    <h2>@Model.InactiveCount</h2>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card border-warning">
+                <div class="card-body">
+                    <h6>Thiếu liên hệ</h6>
+                    <h2 class="text-warning">
+                        @Model.MissingContactCount
+                    </h2>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
     <!-- KẾT QUẢ -->
     <h5>
         Kết quả tìm kiếm: @Model.Total học sinh
@@ -135,11 +180,13 @@
                     <th>Lớp</th>
                     <th>Năm học</th>
                     <th>Trạng thái</th>
+                    <th>Liên hệ</th>
                     <th>Thao tác</th>
                 </tr>
             </thead>
 
             <tbody>
+
                 @foreach (var student in Model.Students)
                 {
                     <tr>
@@ -161,6 +208,7 @@
                             @student.SchoolClass?.AcademicYear?.Code
                         </td>
 
+                        <!-- Trạng thái -->
                         <td>
                             @if (student.Status == "Active")
                             {
@@ -176,16 +224,42 @@
                             }
                         </td>
 
+                        <!-- Liên hệ -->
                         <td>
-                            <a asp-controller="Students"
-                               asp-action="Details"
-                               asp-route-id="@student.Id"
-                               class="btn btn-info btn-sm">
-                                Chi tiết
-                            </a>
+                            @if (student.PrimaryContact == null ||
+                                 string.IsNullOrWhiteSpace(student.PrimaryContact.Phone))
+                            {
+                                <span class="badge bg-warning text-dark">
+                                    Thiếu SĐT liên hệ
+                                </span>
+                            }
+                            else
+                            {
+                                @student.PrimaryContact.Phone
+                            }
+                        </td>
+
+                        <!-- Thao tác -->
+                        <td>
+                            <div class="d-flex gap-2">
+                                <a asp-controller="Students"
+                                   asp-action="Details"
+                                   asp-route-id="@student.Id"
+                                   class="btn btn-info btn-sm">
+                                    Chi tiết
+                                </a>
+
+                                <a asp-controller="Students"
+                                   asp-action="Edit"
+                                   asp-route-id="@student.Id"
+                                   class="btn btn-warning btn-sm">
+                                    Chỉnh sửa
+                                </a>
+                            </div>
                         </td>
                     </tr>
                 }
+
             </tbody>
         </table>
     </div>
