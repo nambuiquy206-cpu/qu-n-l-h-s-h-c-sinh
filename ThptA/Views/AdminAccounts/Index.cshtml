@@ -1,0 +1,56 @@
+﻿@model IEnumerable<ThptA.Models.AppUser>
+
+@{
+    ViewData["Title"] = "Quản lý tài khoản giáo viên";
+}
+
+<div class="container mt-4">
+    <h2>Quản lý tài khoản giáo viên chủ nhiệm</h2>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success">
+            @TempData["Success"]
+        </div>
+    }
+
+    <a asp-controller="AdminAccounts"
+       asp-action="Create"
+       class="btn btn-primary mb-3">
+        + Thêm tài khoản giáo viên
+    </a>
+
+    <table class="table table-bordered table-striped">
+        <thead class="table-dark">
+            <tr>
+                <th>Tên đăng nhập</th>
+                <th>Họ tên giáo viên</th>
+                <th>Trạng thái</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            @foreach (var teacher in Model)
+            {
+                <tr>
+                    <td>@teacher.UserName</td>
+                    <td>@teacher.FullName</td>
+                    <td>
+                        @if (teacher.IsActive)
+                        {
+                            <span class="badge bg-success">
+                                Hoạt động
+                            </span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-danger">
+                                Đã khóa
+                            </span>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
