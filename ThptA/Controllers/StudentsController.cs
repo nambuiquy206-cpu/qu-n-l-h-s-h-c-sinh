@@ -25,65 +25,172 @@ namespace ThptA.Controllers
         }
 
         // Xem danh sách và tìm kiếm học sinh
+
         [HttpGet]
         public async Task<IActionResult> Index(
             string? q,
+            int? yearId,
+            int? grade,
+            int? classId,
+            string? status,
             int page = 1)
         {
+            const int pageSize = 20;
+
+            q = q?.Trim();
+            page = Math.Max(1, page);
+
+            if (status != "Active" && status != "Inactive")
+                status = null;
+
+            bool isAdmin = User.IsInRole("Admin");
+            var teacherId = _userManager.GetUserId(User);
+
+            if (!isAdmin && string.IsNullOrEmpty(teacherId))
+                return Forbid();
+
+            // 1. Truy vấn học sinh
             var query = _db.Students
                 .AsNoTracking()
                 .AsQueryable();
 
-            // Admin xem toàn bộ học sinh.
-            // Teacher chỉ xem lớp mình phụ trách.
-            if (!User.IsInRole("Admin"))
+            // 2. Phân quyền giáo viên
+            if (!isAdmin)
             {
-                var teacherId = _userManager.GetUserId(User);
-
-                if (string.IsNullOrEmpty(teacherId))
-                    return Forbid();
-
                 query = query.Where(s =>
                     s.SchoolClass != null &&
                     s.SchoolClass.TeacherId == teacherId);
             }
 
-            // Tìm theo mã hoặc tên học sinh
+            // 3. Tìm theo mã hoặc họ tên
             if (!string.IsNullOrWhiteSpace(q))
             {
-                var keyword = q.Trim();
-
                 query = query.Where(s =>
-                    s.Code.Contains(keyword) ||
-                    s.FullName.Contains(keyword));
+                    s.Code.Contains(q) ||
+                    s.FullName.Contains(q));
             }
 
-            // Phân trang
-            const int pageSize = 20;
+            // 4. Lọc theo năm học
+            if (yearId.HasValue)
+            {
+                query = query.Where(s =>
+                    s.SchoolClass != null &&
+                    s.SchoolClass.AcademicYearId == yearId.Value);
+            }
 
-            var total = await query.CountAsync();
+            // 5. Lọc theo khối
+            if (grade.HasValue)
+            {
+                query = query.Where(s =>
+                    s.SchoolClass != null &&
+                    s.SchoolClass.Grade == grade.Value);
+            }
 
-            var totalPages = Math.Max(
+            // 6. Lọc theo lớp
+            if (classId.HasValue)
+            {
+                query = query.Where(s =>
+                    s.ClassId == classId.Value);
+            }
+
+            // 7. Lọc theo trạng thái
+            if (status != null)
+            {
+                query = query.Where(s =>
+                    s.Status == status);
+            }
+
+            // 8. Lấy danh sách năm học
+            var yearQuery = _db.AcademicYears
+                .AsNoTracking()
+                .AsQueryable();
+
+            if (!isAdmin)
+            {
+                yearQuery = yearQuery.Where(y =>
+                    _db.SchoolClasses.Any(c =>
+                        c.AcademicYearId == y.Id &&
+                        c.TeacherId == teacherId));
+            }
+
+            var years = await yearQuery
+                .OrderByDescending(y => y.Code)
+                .Select(y => new Microsoft.AspNetCore.Mvc.Rendering.SelectListItem
+                {
+                    Value = y.Id.ToString(),
+                    Text = y.Code
+                })
+                .ToListAsync();
+
+            // 9. Lấy danh sách lớp học
+            var classQuery = _db.SchoolClasses
+                .AsNoTracking()
+                .AsQueryable();
+
+            if (!isAdmin)
+            {
+                classQuery = classQuery.Where(c =>
+                    c.TeacherId == teacherId);
+            }
+
+            if (yearId.HasValue)
+            {
+                classQuery = classQuery.Where(c =>
+                    c.AcademicYearId == yearId.Value);
+            }
+
+            if (grade.HasValue)
+            {
+                classQuery = classQuery.Where(c =>
+                    c.Grade == grade.Value);
+            }
+
+            var classes = await classQuery
+                .OrderBy(c => c.Grade)
+                .ThenBy(c => c.Name)
+                .Select(c => new Microsoft.AspNetCore.Mvc.Rendering.SelectListItem
+                {
+                    Value = c.Id.ToString(),
+                    Text = c.Name + " - " + c.AcademicYear!.Code
+                })
+                .ToListAsync();
+
+            // 10. Đếm kết quả và phân trang
+            int total = await query.CountAsync();
+
+            int pageCount = Math.Max(
                 1,
                 (int)Math.Ceiling(total / (double)pageSize));
 
-            page = Math.Clamp(page, 1, totalPages);
+            page = Math.Min(page, pageCount);
 
             var students = await query
                 .Include(s => s.SchoolClass)
-                .ThenInclude(c => c!.AcademicYear)
+                    .ThenInclude(c => c!.AcademicYear)
                 .OrderBy(s => s.Code)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
                 .ToListAsync();
 
-            ViewBag.Search = q?.Trim() ?? "";
-            ViewBag.Page = page;
-            ViewBag.TotalPages = totalPages;
-            ViewBag.TotalStudents = total;
+            // 11. Trả dữ liệu ra giao diện
+            var model = new StudentListVm
+            {
+                Q = q,
+                YearId = yearId,
+                Grade = grade,
+                ClassId = classId,
+                Status = status,
+                Students = students,
+                YearOptions = years,
+                ClassOptions = classes,
+                Page = page,
+                PageCount = pageCount,
+                Total = total
+            };
 
-            return View(students);
+            return View(model);
         }
+
 
         // Hiển thị trang thêm học sinh
         [HttpGet]
