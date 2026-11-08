@@ -156,6 +156,19 @@ namespace ThptA.Data
                 .HasForeignKey(p => p.StudentFeeId)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            // 9. LIÊN KẾT TÀI KHOẢN VỚI HỌC SINH
+            builder.Entity<AppUser>()
+                .HasOne(u => u.Student)
+                .WithMany()
+                .HasForeignKey(u => u.StudentId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Mỗi học sinh chỉ có một tài khoản
+            builder.Entity<AppUser>()
+                .HasIndex(u => u.StudentId)
+                .IsUnique()
+                .HasFilter("[StudentId] IS NOT NULL");
+
         }
     }
 }

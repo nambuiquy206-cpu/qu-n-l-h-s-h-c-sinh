@@ -13,10 +13,21 @@ public class HomeController : Controller
         _logger = logger;
     }
 
+
     public IActionResult Index()
     {
+        // Học sinh được chuyển đến cổng thông tin riêng
+        if (User.Identity?.IsAuthenticated == true &&
+            User.IsInRole("Student"))
+        {
+            return RedirectToAction(
+                "Index", "StudentPortal");
+        }
+
+        // Admin, giáo viên và khách giữ nguyên trang chủ
         return View();
     }
+
 
     public IActionResult Privacy()
     {

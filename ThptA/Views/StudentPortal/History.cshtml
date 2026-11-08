@@ -1,0 +1,94 @@
+﻿@model ThptA.ViewModels.StudentPortalVm
+
+@{
+    ViewData["Title"] = "Lịch sử đóng tiền";
+
+    var payments = Model.Fees
+        .SelectMany(f => f.Payments.Select(p => new
+        {
+            FeeTitle = f.Title,
+            Amount = p.Amount,
+            PaidAtUtc = p.PaidAtUtc,
+            Note = p.Note
+        }))
+        .OrderByDescending(p => p.PaidAtUtc)
+        .ToList();
+
+    var totalPaid = payments.Sum(p => p.Amount);
+}
+
+<div class="container mt-4">
+
+    <h2 class="mb-3">Lịch sử đóng tiền</h2>
+
+    <p>
+        <strong>Học sinh:</strong>
+        @Model.Student.Code - @Model.Student.FullName
+    </p>
+
+    <div class="alert alert-success">
+        <strong>Tổng tiền đã đóng:</strong>
+        @totalPaid.ToString("N0") đ
+    </div>
+
+    @if (payments.Any())
+    {
+        <div class="table-responsive">
+            <table class="table table-bordered table-striped">
+
+                <thead class="table-dark">
+                    <tr>
+                        <th>STT</th>
+                        <th>Khoản thu</th>
+                        <th>Ngày đóng</th>
+                        <th>Số tiền</th>
+                        <th>Ghi chú</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    @{
+                        int stt = 1;
+                    }
+
+                    @foreach (var payment in payments)
+                    {
+                        <tr>
+                            <td>@(stt++)</td>
+
+                            <td>@payment.FeeTitle</td>
+
+                            <td>
+                                @(payment.PaidAtUtc
+                                    .AddHours(7)
+                                    .ToString("dd/MM/yyyy HH:mm"))
+                            </td>
+
+                            <td class="text-success fw-bold">
+                                @payment.Amount.ToString("N0") đ
+                            </td>
+
+                            <td>
+                                @(string.IsNullOrWhiteSpace(payment.Note)
+                                    ? "Không có ghi chú"
+                                    : payment.Note)
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+
+            </table>
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-info">
+            Em chưa có lịch sử đóng tiền.
+        </div>
+    }
+
+    <p class="text-muted small">
+        Thời gian hiển thị theo giờ Việt Nam (UTC+7).
+    </p>
+
+</div>

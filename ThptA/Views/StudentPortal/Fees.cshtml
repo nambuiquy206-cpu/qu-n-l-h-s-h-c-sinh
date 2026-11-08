@@ -1,0 +1,128 @@
+﻿@model ThptA.ViewModels.StudentPortalVm
+
+@{
+    ViewData["Title"] = "Khoản thu của tôi";
+
+    var totalDue = Model.Fees.Sum(f => f.AmountDue);
+
+    var totalPaid = Model.Fees.Sum(f =>
+        f.Payments.Sum(p => p.Amount));
+
+    var remaining = totalDue - totalPaid;
+}
+
+<div class="container mt-4">
+
+    <h2 class="mb-3">Các khoản thu của em</h2>
+
+    <p>
+        <strong>Học sinh:</strong>
+        @Model.Student.Code - @Model.Student.FullName
+    </p>
+
+    <div class="row g-3 mb-4">
+
+        <div class="col-md-4">
+            <div class="card border-primary h-100">
+                <div class="card-body">
+                    <h6>Tổng phải đóng</h6>
+                    <h3 class="text-primary">
+                        @totalDue.ToString("N0") đ
+                    </h3>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card border-success h-100">
+                <div class="card-body">
+                    <h6>Đã đóng</h6>
+                    <h3 class="text-success">
+                        @totalPaid.ToString("N0") đ
+                    </h3>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card border-danger h-100">
+                <div class="card-body">
+                    <h6>Còn thiếu</h6>
+                    <h3 class="text-danger">
+                        @remaining.ToString("N0") đ
+                    </h3>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-bordered table-striped">
+
+            <thead class="table-dark">
+                <tr>
+                    <th>Khoản thu</th>
+                    <th>Năm học</th>
+                    <th>Phải đóng</th>
+                    <th>Đã đóng</th>
+                    <th>Còn thiếu</th>
+                    <th>Hạn đóng</th>
+                    <th>Trạng thái</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                @foreach (var fee in Model.Fees)
+                {
+                    var paid = fee.Payments.Sum(p => p.Amount);
+                    var debt = fee.AmountDue - paid;
+
+                    <tr>
+                        <td>@fee.Title</td>
+                        <td>@fee.AcademicYear.Code</td>
+                        <td>@fee.AmountDue.ToString("N0") đ</td>
+                        <td>@paid.ToString("N0") đ</td>
+                        <td>@debt.ToString("N0") đ</td>
+                        <td>
+                            @fee.DueDate.ToString("dd/MM/yyyy")
+                        </td>
+                        <td>
+                            @if (debt <= 0)
+                            {
+                                <span class="badge bg-success">
+                                    Đã đóng đủ
+                                </span>
+                            }
+                            else if (paid > 0)
+                            {
+                                <span class="badge bg-warning text-dark">
+                                    Đóng một phần
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-danger">
+                                    Chưa đóng
+                                </span>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+
+        </table>
+    </div>
+
+    @if (!Model.Fees.Any())
+    {
+        <div class="alert alert-info">
+            Em chưa có khoản thu nào.
+        </div>
+    }
+
+    <div class="alert alert-secondary mt-3">
+        Tiền đã đóng được cập nhật sau khi nhà trường xác nhận.
+    </div>
+
+</div>

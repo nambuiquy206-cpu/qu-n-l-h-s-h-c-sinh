@@ -1,0 +1,91 @@
+﻿@model ThptA.ViewModels.StudentAccountCreateVm
+
+@{
+    ViewData["Title"] = "Cấp tài khoản học sinh";
+}
+
+<div class="container mt-4">
+
+    <h2 class="mb-4">Cấp tài khoản học sinh</h2>
+
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            Thông tin học sinh
+        </div>
+
+        <div class="card-body">
+            <p>
+                <strong>Học sinh:</strong>
+                @Model.StudentDisplay
+            </p>
+
+            <p>
+                <strong>Tên đăng nhập:</strong>
+                @Model.UserName
+            </p>
+
+            <p>
+                <strong>Vai trò:</strong>
+                Học sinh (Student)
+            </p>
+        </div>
+    </div>
+
+    <form asp-controller="StudentAccounts"
+          asp-action="Create"
+          method="post">
+
+        <input asp-for="StudentId" type="hidden" />
+
+        <div asp-validation-summary="All"
+             class="text-danger"></div>
+
+        <div class="mb-3">
+            <label class="form-label">
+                Mật khẩu
+            </label>
+
+            <input asp-for="Password"
+                   type="password"
+                   autocomplete="new-password"
+                   class="form-control" />
+
+            <span asp-validation-for="Password"
+                  class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">
+                Xác nhận mật khẩu
+            </label>
+
+            <input asp-for="ConfirmPassword"
+                   type="password"
+                   autocomplete="new-password"
+                   class="form-control" />
+
+            <span asp-validation-for="ConfirmPassword"
+                  class="text-danger"></span>
+        </div>
+
+        <div class="alert alert-warning">
+            Hãy đặt mật khẩu đủ mạnh và cung cấp
+            riêng cho học sinh. Không sử dụng
+            mật khẩu giống nhau cho nhiều tài khoản.
+        </div>
+
+        <button type="submit"
+                class="btn btn-success">
+            Tạo tài khoản học sinh
+        </button>
+
+        <a asp-controller="Students"
+           asp-action="Details"
+           asp-route-id="@Model.StudentId"
+           class="btn btn-secondary">
+            Quay lại hồ sơ
+        </a>
+
+    </form>
+
+</div>

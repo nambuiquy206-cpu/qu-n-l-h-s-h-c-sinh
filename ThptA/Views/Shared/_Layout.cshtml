@@ -1,31 +1,80 @@
-﻿<!DOCTYPE html>
-<html lang="en">
+﻿
+<!DOCTYPE html>
+<html lang="vi">
 <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0" />
+
     <title>@ViewData["Title"] - ThptA</title>
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/ThptA.styles.css" asp-append-version="true" />
+
+    <link rel="stylesheet"
+          href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+
+    <link rel="stylesheet"
+          href="~/css/site.css"
+          asp-append-version="true" />
+
+    <link rel="stylesheet"
+          href="~/ThptA.styles.css"
+          asp-append-version="true" />
 </head>
+
 <body>
+
     <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
+        <nav class="navbar navbar-expand-xl navbar-light
+                    bg-white border-bottom box-shadow mb-3">
+
             <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">ThptA</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
+
+                <!-- TÊN WEBSITE -->
+                @if (User.IsInRole("Student"))
+                {
+                    <a class="navbar-brand fw-bold"
+                       href="/StudentPortal/Index">
+                        THPT A
+                    </a>
+                }
+                else
+                {
+                    <a class="navbar-brand fw-bold"
+                       asp-controller="Home"
+                       asp-action="Index">
+                        THPT A
+                    </a>
+                }
+
+                <!-- NÚT MENU TRÊN ĐIỆN THOẠI -->
+                <button class="navbar-toggler"
+                        type="button"
+                        data-bs-toggle="collapse"
+                        data-bs-target="#mainNavbar"
+                        aria-controls="mainNavbar"
+                        aria-expanded="false"
+                        aria-label="Mở menu">
+
                     <span class="navbar-toggler-icon"></span>
                 </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-                        </li>
 
+                <div class="collapse navbar-collapse"
+                     id="mainNavbar">
+
+                    <ul class="navbar-nav me-auto mb-2 mb-xl-0">
+
+                        <!-- ADMIN VÀ GIÁO VIÊN -->
+                        @if (!User.IsInRole("Student"))
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-dark"
+                                   asp-controller="Home"
+                                   asp-action="Index">
+                                    Trang chủ
+                                </a>
+                            </li>
+                        }
+
+                        <!-- CHỨC NĂNG RIÊNG CỦA ADMIN -->
                         @if (User.IsInRole("Admin"))
                         {
                             <li class="nav-item">
@@ -52,7 +101,6 @@
                                 </a>
                             </li>
 
-                           
                             <li class="nav-item">
                                 <a class="nav-link text-dark"
                                    asp-controller="Audit"
@@ -60,10 +108,9 @@
                                     Nhật ký thao tác
                                 </a>
                             </li>
-
-
                         }
 
+                        <!-- ADMIN VÀ GIÁO VIÊN -->
                         @if (User.IsInRole("Admin") ||
                              User.IsInRole("Teacher"))
                         {
@@ -74,10 +121,7 @@
                                     Quản lý học sinh
                                 </a>
                             </li>
-                        }
 
-                        @if (User.IsInRole("Admin") || User.IsInRole("Teacher"))
-                        {
                             <li class="nav-item">
                                 <a class="nav-link text-dark"
                                    asp-controller="StudentStatistics"
@@ -85,60 +129,117 @@
                                     Thống kê học sinh
                                 </a>
                             </li>
-                            
-<li class="nav-item">
-    <a class="nav-link text-dark"
-       asp-controller="Timetables"
-       asp-action="Index">
-        Thời khóa biểu
-    </a>
-</li>
 
+                            <li class="nav-item">
+                                <a class="nav-link text-dark"
+                                   asp-controller="Timetables"
+                                   asp-action="Index">
+                                    Thời khóa biểu
+                                </a>
+                            </li>
                         }
-                      
+
+                        <!-- MENU RIÊNG CỦA HỌC SINH -->
+                        
+@if (User.IsInRole("Student"))
+{
+    <li class="nav-item">
+        <a class="nav-link text-dark"
+           asp-controller="StudentPortal"
+           asp-action="Index">
+            Trang của tôi
+        </a>
+    </li>
+
+    <li class="nav-item">
+        <a class="nav-link text-dark"
+           asp-controller="StudentPortal"
+           asp-action="Timetable">
+            Thời khóa biểu
+        </a>
+    </li>
+
+    <li class="nav-item">
+        <a class="nav-link text-dark"
+           asp-controller="StudentPortal"
+           asp-action="Fees">
+            Khoản thu
+        </a>
+    </li>
+
+    <li class="nav-item">
+        <a class="nav-link text-dark"
+           asp-controller="StudentPortal"
+           asp-action="History">
+            Lịch sử đóng tiền
+        </a>
+    </li>
+}
+
+
                     </ul>
+
+                    <!-- ĐĂNG NHẬP / ĐĂNG XUẤT -->
+                    <div class="d-flex flex-wrap
+                                align-items-center gap-2 py-2">
+
+                        @if (User.Identity?.IsAuthenticated == true)
+                        {
+                            <span class="text-dark">
+                                Xin chào, @User.Identity.Name
+                            </span>
+
+                            <form asp-controller="Account"
+                                  asp-action="Logout"
+                                  method="post"
+                                  class="m-0">
+
+                                <button type="submit"
+                                        class="btn btn-outline-danger btn-sm">
+                                    Đăng xuất
+                                </button>
+                            </form>
+                        }
+                        else
+                        {
+                            <a asp-controller="Account"
+                               asp-action="Login"
+                               class="btn btn-primary btn-sm">
+                                Đăng nhập
+                            </a>
+                        }
+
+                    </div>
+
                 </div>
+
             </div>
 
-            @if (User.Identity?.IsAuthenticated == true)
-            {
-                <div class="d-flex align-items-center gap-3">
-                    <span>Xin chào, @User.Identity.Name</span>
-
-                    <form asp-controller="Account"
-                          asp-action="Logout"
-                          method="post">
-                        <button type="submit"
-                                class="btn btn-outline-danger">
-                            Đăng xuất
-                        </button>
-                    </form>
-                </div>
-            }
-            else
-            {
-                <a asp-controller="Account"
-                   asp-action="Login"
-                   class="btn btn-primary">
-                    Đăng nhập
-                </a>
-            }
         </nav>
     </header>
+
+    <!-- NỘI DUNG CHÍNH -->
     <div class="container">
         <main role="main" class="pb-3">
             @RenderBody()
         </main>
     </div>
 
+    <!-- CHÂN TRANG -->
     <footer class="border-top footer text-muted">
         <div class="container">
-            &copy; 2026 - ThptA - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+            &copy; 2026 - THPT A
         </div>
     </footer>
+
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
+
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="~/js/site.js" asp-append-version="true"></script>
+
+    <script src="~/js/site.js"
+            asp-append-version="true"></script>
+
     @await RenderSectionAsync("Scripts", required: false)
+
 </body>
 </html>

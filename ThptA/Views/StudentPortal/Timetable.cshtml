@@ -1,0 +1,63 @@
+﻿@model ThptA.ViewModels.StudentPortalVm
+
+@{
+    ViewData["Title"] = "Thời khóa biểu";
+}
+
+<div class="container mt-4">
+
+    <h2 class="mb-3">Thời khóa biểu</h2>
+
+    <div class="alert alert-primary">
+        <strong>Học sinh:</strong> @Model.Student.FullName
+
+        <div>
+            <strong>Lớp:</strong>
+            @Model.Student.SchoolClass?.Name
+        </div>
+
+        <div>
+            <strong>Năm học:</strong>
+            @Model.Student.SchoolClass?.AcademicYear?.Code
+        </div>
+    </div>
+
+    @if (Model.Timetable.Any())
+    {
+        <div class="table-responsive">
+            <table class="table table-bordered table-striped">
+
+                <thead class="table-dark">
+                    <tr>
+                        <th>Thứ</th>
+                        <th>Tiết</th>
+                        <th>Môn học</th>
+                        <th>Giáo viên</th>
+                        <th>Phòng học</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    @foreach (var lesson in Model.Timetable)
+                    {
+                        <tr>
+                            <td>Thứ @lesson.DayOfWeek</td>
+                            <td>@lesson.Period</td>
+                            <td>@lesson.SubjectName</td>
+                            <td>@lesson.TeacherName</td>
+                            <td>@lesson.Room</td>
+                        </tr>
+                    }
+                </tbody>
+
+            </table>
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-info">
+            Lớp hiện chưa có thời khóa biểu.
+        </div>
+    }
+
+</div>

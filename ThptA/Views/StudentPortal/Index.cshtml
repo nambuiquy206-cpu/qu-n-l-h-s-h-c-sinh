@@ -1,0 +1,79 @@
+﻿@model ThptA.ViewModels.StudentPortalVm
+
+@{
+    ViewData["Title"] = "Trang của tôi";
+}
+
+<div class="container mt-4">
+
+    <h2 class="mb-4">Trang thông tin cá nhân</h2>
+
+    <div class="card mb-4">
+
+        <div class="card-header bg-primary text-white">
+            Hồ sơ học sinh
+        </div>
+
+        <div class="card-body">
+
+            <p><strong>Mã học sinh:</strong> @Model.Student.Code</p>
+
+            <p><strong>Họ tên:</strong> @Model.Student.FullName</p>
+
+            <p>
+                <strong>Ngày sinh:</strong>
+                @Model.Student.BirthDate.ToString("dd/MM/yyyy")
+            </p>
+
+            <p>
+                <strong>Giới tính:</strong>
+                @(Model.Student.Gender == "M" ? "Nam" :
+                  Model.Student.Gender == "F" ? "Nữ" : "Khác")
+            </p>
+
+            <p><strong>Địa chỉ:</strong> @Model.Student.Address</p>
+
+            <p>
+                <strong>Lớp:</strong>
+                @Model.Student.SchoolClass?.Name
+            </p>
+
+            <p>
+                <strong>Năm học:</strong>
+                @Model.Student.SchoolClass?.AcademicYear?.Code
+            </p>
+
+            <p>
+                <strong>Trạng thái:</strong>
+                @(Model.Student.Status == "Active"
+                    ? "Đang học" : "Ngừng học")
+            </p>
+
+        </div>
+    </div>
+
+    <h4 class="mb-3">Các chức năng của em</h4>
+
+    <div class="d-flex flex-wrap gap-2">
+
+        <a asp-controller="StudentPortal"
+           asp-action="Timetable"
+           class="btn btn-outline-primary">
+            Xem thời khóa biểu
+        </a>
+
+        <a asp-controller="StudentPortal"
+           asp-action="Fees"
+           class="btn btn-outline-success">
+            Xem khoản thu
+        </a>
+
+        <a asp-controller="StudentPortal"
+           asp-action="History"
+           class="btn btn-outline-secondary">
+            Lịch sử đóng tiền
+        </a>
+
+    </div>
+
+</div>

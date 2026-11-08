@@ -260,9 +260,11 @@
                             }
                         </td>
 
+                     
                         <!-- Thao tác -->
                         <td>
-                            <div class="d-flex gap-2">
+                            <div class="d-flex flex-wrap gap-2">
+
                                 <a asp-controller="Students"
                                    asp-action="Details"
                                    asp-route-id="@student.Id"
@@ -276,8 +278,20 @@
                                    class="btn btn-warning btn-sm">
                                     Chỉnh sửa
                                 </a>
+
+                                @if (User.IsInRole("Admin"))
+                                {
+                                    <a asp-controller="StudentAccounts"
+                                       asp-action="Create"
+                                       asp-route-studentId="@student.Id"
+                                       class="btn btn-outline-success btn-sm">
+                                        Cấp tài khoản
+                                    </a>
+                                }
+
                             </div>
                         </td>
+
                     </tr>
                 }
 

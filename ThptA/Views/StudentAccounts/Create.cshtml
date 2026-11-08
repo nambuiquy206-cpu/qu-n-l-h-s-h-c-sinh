@@ -1,0 +1,83 @@
+﻿@model ThptA.ViewModels.StudentAccountCreateVm
+
+@{
+    ViewData["Title"] = "Cấp tài khoản học sinh";
+}
+
+<div class="container mt-4">
+
+    <h2 class="mb-4">Cấp tài khoản học sinh</h2>
+
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            Thông tin học sinh
+        </div>
+
+        <div class="card-body">
+            <p>
+                <strong>Học sinh:</strong>
+                @Model.StudentDisplay
+            </p>
+
+            <p>
+                <strong>Tên đăng nhập:</strong>
+                @Model.UserName
+            </p>
+
+            <p>
+                <strong>Vai trò:</strong>
+                Học sinh (Student)
+            </p>
+        </div>
+    </div>
+
+    <form asp-controller="StudentAccounts"
+          asp-action="Create"
+          method="post">
+
+        <input asp-for="StudentId" type="hidden" />
+
+        <div asp-validation-summary="ModelOnly"
+             class="text-danger"></div>
+
+        <div class="mb-3">
+            <label asp-for="Password" class="form-label">
+                Mật khẩu
+            </label>
+
+            <input asp-for="Password"
+                   type="password"
+                   class="form-control"
+                   autocomplete="new-password" />
+
+            <span asp-validation-for="Password"
+                  class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="ConfirmPassword" class="form-label">
+                Xác nhận mật khẩu
+            </label>
+
+            <input asp-for="ConfirmPassword"
+                   type="password"
+                   class="form-control"
+                   autocomplete="new-password" />
+
+            <span asp-validation-for="ConfirmPassword"
+                  class="text-danger"></span>
+        </div>
+
+        <button type="submit" class="btn btn-success">
+            Tạo tài khoản học sinh
+        </button>
+
+        <a asp-controller="Students"
+           asp-action="Index"
+           class="btn btn-secondary">
+            Quay lại quản lý học sinh
+        </a>
+
+    </form>
+
+</div>

@@ -26,15 +26,20 @@
     <!-- THEO DÕI KHOẢN THU -->
     @if (User.IsInRole("Admin"))
     {
-        <div class="mb-3">
+        <div class="d-flex flex-wrap gap-2 mb-3">
+
             <a asp-controller="StudentFees"
                asp-action="Index"
                asp-route-studentId="@Model.Id"
                class="btn btn-outline-primary">
                 Theo dõi khoản thu
             </a>
+
+            
+
         </div>
     }
+
 
     <!-- THÔNG TIN HỌC SINH -->
     <div class="card mb-4">
