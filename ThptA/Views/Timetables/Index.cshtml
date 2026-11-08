@@ -1,0 +1,132 @@
+﻿@model ThptA.ViewModels.TimetableIndexVm
+
+@{
+    ViewData["Title"] = "Thời khóa biểu";
+}
+
+<div class="container mt-4">
+
+    <h2 class="mb-4">Quản lý thời khóa biểu</h2>
+
+    @if (User.IsInRole("Admin"))
+    {
+        <a asp-controller="Timetables"
+           asp-action="Create"
+           asp-route-schoolClassId="@Model.SchoolClassId"
+           class="btn btn-success mb-3">
+            + Thêm tiết học
+        </a>
+    }
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success">
+            @TempData["Success"]
+        </div>
+    }
+
+
+    <form asp-controller="Timetables"
+          asp-action="Index"
+          method="get"
+          class="mb-4">
+
+        <div class="row g-2 align-items-end">
+            <div class="col-md-5">
+                <label class="form-label">
+                    Chọn lớp học
+                </label>
+
+                <select asp-for="SchoolClassId"
+                        asp-items="Model.ClassOptions"
+                        class="form-select">
+                </select>
+            </div>
+
+            <div class="col-md-3">
+                <button type="submit"
+                        class="btn btn-primary">
+                    Xem thời khóa biểu
+                </button>
+            </div>
+        </div>
+    </form>
+
+    @if (Model.SchoolClassId.HasValue)
+    {
+        <h4 class="mb-3">
+            Thời khóa biểu: @Model.ClassDisplay
+        </h4>
+
+        <div class="table-responsive">
+            <table class="table table-bordered text-center">
+
+                <thead class="table-dark">
+                    <tr>
+                        <th>Tiết</th>
+                        <th>Thứ 2</th>
+                        <th>Thứ 3</th>
+                        <th>Thứ 4</th>
+                        <th>Thứ 5</th>
+                        <th>Thứ 6</th>
+                        <th>Thứ 7</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    @for (int period = 1; period <= 10; period++)
+                    {
+                        <tr>
+                            <th>Tiết @period</th>
+
+                            @for (int day = 2; day <= 7; day++)
+                            {
+                                var entry = Model.Entries
+                                    .FirstOrDefault(t =>
+                                        t.DayOfWeek == day &&
+                                        t.Period == period);
+
+                                <td>
+                                    @if (entry != null)
+                                    {
+                                        <strong>
+                                            @entry.SubjectName
+                                        </strong>
+
+                                        @if (!string.IsNullOrWhiteSpace(
+                                            entry.TeacherName))
+                                        {
+                                            <div class="small text-muted">
+                                                @entry.TeacherName
+                                            </div>
+                                        }
+
+                                        @if (!string.IsNullOrWhiteSpace(
+                                            entry.Room))
+                                        {
+                                            <div class="small">
+                                                Phòng: @entry.Room
+                                            </div>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">-</span>
+                                    }
+                                </td>
+                            }
+                        </tr>
+                    }
+                </tbody>
+
+            </table>
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-info">
+            Chưa có lớp học được phân công.
+        </div>
+    }
+
+</div>

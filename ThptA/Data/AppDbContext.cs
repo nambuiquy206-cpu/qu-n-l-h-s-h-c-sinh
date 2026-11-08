@@ -29,6 +29,8 @@ namespace ThptA.Data
         public DbSet<AuditLog> AuditLogs
             => Set<AuditLog>();
 
+        public DbSet<TimetableEntry> TimetableEntries { get; set; } = null!;
+
         protected override void OnModelCreating(
             ModelBuilder builder)
         {

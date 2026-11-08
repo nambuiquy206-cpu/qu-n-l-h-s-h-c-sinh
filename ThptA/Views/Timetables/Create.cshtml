@@ -1,0 +1,113 @@
+﻿
+@model ThptA.ViewModels.TimetableCreateVm
+
+@{
+    ViewData["Title"] = "Thêm tiết học";
+}
+
+<div class="container mt-4">
+
+    <h2 class="mb-4">Thêm tiết học vào thời khóa biểu</h2>
+
+    <form asp-controller="Timetables"
+          asp-action="Create"
+          method="post">
+
+        <div asp-validation-summary="All"
+             class="text-danger"></div>
+
+        <div class="row g-3">
+
+            <div class="col-md-6">
+                <label class="form-label">Lớp học</label>
+
+                <select asp-for="SchoolClassId"
+                        asp-items="Model.ClassOptions"
+                        class="form-select">
+                    <option value="0">
+                        -- Chọn lớp --
+                    </option>
+                </select>
+            </div>
+
+            <div class="col-md-3">
+                <label class="form-label">Thứ</label>
+
+                <select asp-for="DayOfWeek"
+                        class="form-select">
+                    <option value="2">Thứ 2</option>
+                    <option value="3">Thứ 3</option>
+                    <option value="4">Thứ 4</option>
+                    <option value="5">Thứ 5</option>
+                    <option value="6">Thứ 6</option>
+                    <option value="7">Thứ 7</option>
+                </select>
+            </div>
+
+            <div class="col-md-3">
+                <label class="form-label">Tiết học</label>
+
+                <select asp-for="Period"
+                        class="form-select">
+                    @for (int i = 1; i <= 10; i++)
+                    {
+                        <option value="@i">
+                            Tiết @i
+                        </option>
+                    }
+                </select>
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label">
+                    Tên môn học
+                </label>
+
+                <input asp-for="SubjectName"
+                       class="form-control"
+                       placeholder="Ví dụ: Toán" />
+
+                <span asp-validation-for="SubjectName"
+                      class="text-danger"></span>
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label">
+                    Giáo viên bộ môn
+                </label>
+
+                <input asp-for="TeacherName"
+                       class="form-control"
+                       placeholder="Ví dụ: Nguyễn Văn A" />
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label">
+                    Phòng học
+                </label>
+
+                <input asp-for="Room"
+                       class="form-control"
+                       placeholder="Ví dụ: P101" />
+            </div>
+
+        </div>
+
+        <div class="mt-4">
+
+            <button type="submit"
+                    class="btn btn-success">
+                Lưu tiết học
+            </button>
+
+            <a asp-controller="Timetables"
+               asp-action="Index"
+               class="btn btn-secondary">
+                Quay lại
+            </a>
+
+        </div>
+
+    </form>
+
+</div>
