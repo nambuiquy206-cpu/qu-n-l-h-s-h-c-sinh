@@ -150,6 +150,16 @@
                 </form>
             }
 
+            @if (Model.SchoolClass != null)
+            {
+                <a asp-controller="Timetables"
+                   asp-action="Index"
+                   asp-route-schoolClassId="@Model.ClassId"
+                   class="btn btn-info me-2">
+                    Xem thời khóa biểu lớp
+                </a>
+            }
+
             @if (User.IsInRole("Admin"))
             {
                 <a asp-controller="Students"
