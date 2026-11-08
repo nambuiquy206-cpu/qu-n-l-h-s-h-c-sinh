@@ -1,0 +1,463 @@
+﻿
+using Microsoft.AspNetCore.Mvc.Rendering;
+using ThptA.ViewModels;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using ThptA.Data;
+using ThptA.Models;
+
+namespace ThptA.Controllers
+{
+    [Authorize(Roles = "Admin,Teacher")]
+    public class StudentsController : Controller
+    {
+        private readonly AppDbContext _db;
+        private readonly UserManager<AppUser> _userManager;
+
+        public StudentsController(
+            AppDbContext db,
+            UserManager<AppUser> userManager)
+        {
+            _db = db;
+            _userManager = userManager;
+        }
+
+        // Xem danh sách và tìm kiếm học sinh
+        [HttpGet]
+        public async Task<IActionResult> Index(
+            string? q,
+            int page = 1)
+        {
+            var query = _db.Students
+                .AsNoTracking()
+                .AsQueryable();
+
+            // Admin xem toàn bộ học sinh.
+            // Teacher chỉ xem lớp mình phụ trách.
+            if (!User.IsInRole("Admin"))
+            {
+                var teacherId = _userManager.GetUserId(User);
+
+                if (string.IsNullOrEmpty(teacherId))
+                    return Forbid();
+
+                query = query.Where(s =>
+                    s.SchoolClass != null &&
+                    s.SchoolClass.TeacherId == teacherId);
+            }
+
+            // Tìm theo mã hoặc tên học sinh
+            if (!string.IsNullOrWhiteSpace(q))
+            {
+                var keyword = q.Trim();
+
+                query = query.Where(s =>
+                    s.Code.Contains(keyword) ||
+                    s.FullName.Contains(keyword));
+            }
+
+            // Phân trang
+            const int pageSize = 20;
+
+            var total = await query.CountAsync();
+
+            var totalPages = Math.Max(
+                1,
+                (int)Math.Ceiling(total / (double)pageSize));
+
+            page = Math.Clamp(page, 1, totalPages);
+
+            var students = await query
+                .Include(s => s.SchoolClass)
+                .ThenInclude(c => c!.AcademicYear)
+                .OrderBy(s => s.Code)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            ViewBag.Search = q?.Trim() ?? "";
+            ViewBag.Page = page;
+            ViewBag.TotalPages = totalPages;
+            ViewBag.TotalStudents = total;
+
+            return View(students);
+        }
+
+        // Hiển thị trang thêm học sinh
+        [HttpGet]
+        public async Task<IActionResult> Create()
+        {
+            var model = new StudentCreateVm();
+
+            await LoadClassOptionsAsync(model);
+
+            return View(model);
+        }
+
+        // Xử lý thêm hồ sơ học sinh
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Create(
+            StudentCreateVm model)
+        {
+            var actorId = _userManager.GetUserId(User);
+
+            if (string.IsNullOrEmpty(actorId))
+                return Challenge();
+
+            if (model.BirthDate.HasValue &&
+                (model.BirthDate.Value.Date > DateTime.Today ||
+                 model.BirthDate.Value.Year < 1900))
+            {
+                ModelState.AddModelError(
+                    nameof(model.BirthDate),
+                    "Ngày sinh không hợp lệ.");
+            }
+
+            // Kiểm tra quyền đối với lớp được chọn
+            var isAdmin = User.IsInRole("Admin");
+
+            var canUseClass = await _db.SchoolClasses
+                .AnyAsync(c =>
+                    c.Id == model.ClassId &&
+                    (isAdmin || c.TeacherId == actorId));
+
+            if (!canUseClass)
+            {
+                ModelState.AddModelError(
+                    nameof(model.ClassId),
+                    "Bạn không có quyền thêm học sinh vào lớp này.");
+            }
+
+            // Kiểm tra mã học sinh đã tồn tại chưa
+            var studentCode = model.Code.Trim();
+
+            var codeExists = await _db.Students
+                .AnyAsync(s => s.Code == studentCode);
+
+            if (codeExists)
+            {
+                ModelState.AddModelError(
+                    nameof(model.Code),
+                    "Mã học sinh đã tồn tại.");
+            }
+
+            if (!ModelState.IsValid)
+            {
+                await LoadClassOptionsAsync(model);
+                return View(model);
+            }
+
+            // Tạo hồ sơ học sinh
+            var student = new Student
+            {
+                Code = studentCode,
+                FullName = model.FullName.Trim(),
+                BirthDate = model.BirthDate!.Value.Date,
+                Gender = model.Gender,
+                Address = model.Address.Trim(),
+                ClassId = model.ClassId,
+                Status = "Active",
+                UpdatedAtUtc = DateTime.UtcNow,
+
+                // Tạo người liên hệ chính cùng hồ sơ
+                PrimaryContact = new PrimaryContact
+                {
+                    FullName = model.ContactFullName.Trim(),
+                    Relationship =
+                        model.ContactRelationship.Trim(),
+                    Phone = model.ContactPhone.Trim()
+                }
+            };
+
+            _db.Students.Add(student);
+
+            // Ghi nhật ký người tạo
+            _db.AuditLogs.Add(new AuditLog
+            {
+                ActorId = actorId,
+                Action = "CREATE_STUDENT",
+                Target = studentCode,
+                AtUtc = DateTime.UtcNow
+            });
+
+            // Lưu học sinh, liên hệ và nhật ký cùng lúc
+            try
+            {
+                await _db.SaveChangesAsync();
+            }
+            catch (DbUpdateException ex) when (
+                ex.InnerException is
+                    Microsoft.Data.SqlClient.SqlException sql &&
+                (sql.Number == 2601 || sql.Number == 2627))
+            {
+                ModelState.AddModelError(
+                    nameof(model.Code),
+                    "Dữ liệu bị trùng. Hãy kiểm tra mã học sinh.");
+
+                await LoadClassOptionsAsync(model);
+                return View(model);
+            }
+
+            TempData["Success"] =
+                "Thêm hồ sơ học sinh thành công.";
+
+            return RedirectToAction(nameof(Index));
+        }
+
+        // Lấy danh sách lớp mà người dùng được phép quản lý
+        private async Task LoadClassOptionsAsync(
+            StudentCreateVm model)
+        {
+            var query = _db.SchoolClasses
+                .AsNoTracking()
+                .AsQueryable();
+
+            if (!User.IsInRole("Admin"))
+            {
+                var teacherId = _userManager.GetUserId(User);
+
+                query = query.Where(
+                    c => c.TeacherId == teacherId);
+            }
+
+            var classes = await query
+                .OrderBy(c => c.Grade)
+                .ThenBy(c => c.Name)
+                .Select(c => new
+                {
+                    c.Id,
+                    c.Name,
+                    YearCode = c.AcademicYear!.Code
+                })
+                .ToListAsync();
+
+            model.ClassOptions = classes
+                .Select(c => new SelectListItem
+                {
+                    Value = c.Id.ToString(),
+                    Text = $"{c.Name} - {c.YearCode}"
+                })
+                .ToList();
+        }
+
+        // Xem chi tiết hồ sơ học sinh
+        [HttpGet]
+        public async Task<IActionResult> Details(int id)
+        {
+            if (id <= 0)
+                return NotFound();
+
+            var query = _db.Students
+                .AsNoTracking()
+                .AsQueryable();
+
+            // Giáo viên chỉ xem học sinh thuộc lớp mình
+            if (!User.IsInRole("Admin"))
+            {
+                var teacherId = _userManager.GetUserId(User);
+
+                if (string.IsNullOrEmpty(teacherId))
+                    return Forbid();
+
+                query = query.Where(s =>
+                    s.SchoolClass != null &&
+                    s.SchoolClass.TeacherId == teacherId);
+            }
+
+            var student = await query
+                .Include(s => s.SchoolClass)
+                    .ThenInclude(c => c!.AcademicYear)
+                .Include(s => s.PrimaryContact)
+                .FirstOrDefaultAsync(s => s.Id == id);
+
+            if (student == null)
+                return NotFound();
+
+            return View(student);
+        }
+
+        // Hiển thị trang chỉnh sửa học sinh
+        [HttpGet]
+        public async Task<IActionResult> Edit(int id)
+        {
+            if (id <= 0)
+                return NotFound();
+
+            var query = _db.Students
+                .AsNoTracking()
+                .Include(s => s.PrimaryContact)
+                .Include(s => s.SchoolClass)
+                    .ThenInclude(c => c!.AcademicYear)
+                .AsQueryable();
+
+            // GVCN chỉ được sửa học sinh thuộc lớp mình
+            if (!User.IsInRole("Admin"))
+            {
+                var teacherId = _userManager.GetUserId(User);
+
+                if (string.IsNullOrEmpty(teacherId))
+                    return Forbid();
+
+                query = query.Where(s =>
+                    s.SchoolClass != null &&
+                    s.SchoolClass.TeacherId == teacherId);
+            }
+
+            var student = await query
+                .FirstOrDefaultAsync(s => s.Id == id);
+
+            if (student == null)
+                return NotFound();
+
+            var model = new StudentEditVm
+            {
+                Id = student.Id,
+                Code = student.Code,
+                ClassDisplay =
+                    $"{student.SchoolClass?.Name} - " +
+                    $"{student.SchoolClass?.AcademicYear?.Code}",
+                FullName = student.FullName,
+                BirthDate = student.BirthDate,
+                Gender = student.Gender,
+                Address = student.Address,
+                ContactFullName =
+                    student.PrimaryContact?.FullName ?? "",
+                ContactRelationship =
+                    student.PrimaryContact?.Relationship ?? "",
+                ContactPhone =
+                    student.PrimaryContact?.Phone ?? "",
+                RowVersion =
+                    Convert.ToBase64String(student.RowVersion)
+            };
+
+            return View(model);
+        }
+
+        // Xử lý lưu hồ sơ đã chỉnh sửa
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(
+            int id, StudentEditVm model)
+        {
+            if (id <= 0 || id != model.Id)
+                return BadRequest();
+
+            var actorId = _userManager.GetUserId(User);
+
+            if (string.IsNullOrEmpty(actorId))
+                return Challenge();
+
+            var query = _db.Students
+                .Include(s => s.PrimaryContact)
+                .Include(s => s.SchoolClass)
+                    .ThenInclude(c => c!.AcademicYear)
+                .AsQueryable();
+
+            if (!User.IsInRole("Admin"))
+            {
+                query = query.Where(s =>
+                    s.SchoolClass != null &&
+                    s.SchoolClass.TeacherId == actorId);
+            }
+
+            var student = await query
+                .FirstOrDefaultAsync(s => s.Id == id);
+
+            if (student == null)
+                return NotFound();
+
+            model.Code = student.Code;
+            model.ClassDisplay =
+                $"{student.SchoolClass?.Name} - " +
+                $"{student.SchoolClass?.AcademicYear?.Code}";
+
+            if (model.BirthDate.HasValue &&
+                (model.BirthDate.Value.Date > DateTime.Today ||
+                 model.BirthDate.Value.Year < 1900))
+            {
+                ModelState.AddModelError(
+                    nameof(model.BirthDate),
+                    "Ngày sinh không hợp lệ.");
+            }
+
+            byte[] originalVersion = Array.Empty<byte>();
+
+            try
+            {
+                originalVersion =
+                    Convert.FromBase64String(model.RowVersion);
+
+                if (originalVersion.Length != 8)
+                    throw new FormatException();
+            }
+            catch (FormatException)
+            {
+                ModelState.AddModelError(
+                    "",
+                    "Dữ liệu phiên bản không hợp lệ. " +
+                    "Vui lòng tải lại hồ sơ.");
+            }
+
+            if (!ModelState.IsValid)
+                return View(model);
+
+            // Kiểm tra thay đổi đồng thời
+            _db.Entry(student)
+                .Property(s => s.RowVersion)
+                .OriginalValue = originalVersion;
+
+            student.FullName = model.FullName.Trim();
+            student.BirthDate = model.BirthDate!.Value.Date;
+            student.Gender = model.Gender;
+            student.Address = model.Address.Trim();
+            student.UpdatedAtUtc = DateTime.UtcNow;
+
+            if (student.PrimaryContact == null)
+            {
+                student.PrimaryContact = new PrimaryContact();
+            }
+
+            student.PrimaryContact.FullName =
+                model.ContactFullName.Trim();
+
+            student.PrimaryContact.Relationship =
+                model.ContactRelationship.Trim();
+
+            student.PrimaryContact.Phone =
+                model.ContactPhone.Trim();
+
+            _db.AuditLogs.Add(new AuditLog
+            {
+                ActorId = actorId,
+                Action = "UPDATE_STUDENT",
+                Target = student.Code,
+                AtUtc = DateTime.UtcNow
+            });
+
+            try
+            {
+                await _db.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                ModelState.AddModelError(
+                    "",
+                    "Hồ sơ đã được người khác cập nhật. " +
+                    "Vui lòng mở lại hồ sơ và thử lại.");
+
+                return View(model);
+            }
+
+            TempData["Success"] =
+                "Cập nhật hồ sơ học sinh thành công.";
+
+            return RedirectToAction(
+                nameof(Details),
+                new { id = student.Id });
+        }
+
+    }
+}

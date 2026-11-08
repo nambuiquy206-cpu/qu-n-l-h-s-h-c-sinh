@@ -35,6 +35,29 @@
                                     Quản lý giáo viên
                                 </a>
                             </li>
+
+                           
+                            <li class="nav-item">
+                                <a class="nav-link text-dark"
+                                   asp-controller="Audit"
+                                   asp-action="Index">
+                                    Nhật ký thao tác
+                                </a>
+                            </li>
+
+
+                        }
+
+                        @if (User.IsInRole("Admin") ||
+                             User.IsInRole("Teacher"))
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-dark"
+                                   asp-controller="Students"
+                                   asp-action="Index">
+                                    Quản lý học sinh
+                                </a>
+                            </li>
                         }
 
                     </ul>

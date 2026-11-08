@@ -1,0 +1,51 @@
+﻿@model List<ThptA.Models.AuditLog>
+
+@{
+    ViewData["Title"] = "Nhật ký thao tác";
+}
+
+<div class="container mt-4">
+    <h2>Nhật ký thao tác hệ thống</h2>
+
+    <p>Hiển thị 100 thao tác mới nhất.</p>
+
+    <table class="table table-bordered table-striped">
+        <thead class="table-dark">
+            <tr>
+                <th>STT</th>
+                <th>Người thực hiện</th>
+                <th>Thao tác</th>
+                <th>Đối tượng</th>
+                <th>Thời gian (UTC)</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            @{
+                int stt = 1;
+            }
+
+            @foreach (var log in Model)
+            {
+                <tr>
+                    <td>@stt</td>
+                    <td>@(log.Actor?.UserName ?? log.ActorId)</td>
+                    <td>@log.Action</td>
+                    <td>@log.Target</td>
+                    <td>
+                        @log.AtUtc.ToString("dd/MM/yyyy HH:mm:ss")
+                    </td>
+                </tr>
+
+                stt++;
+            }
+        </tbody>
+    </table>
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info">
+            Chưa có nhật ký thao tác nào.
+        </div>
+    }
+</div>

@@ -1,0 +1,135 @@
+﻿@model ThptA.ViewModels.StudentEditVm
+
+@{
+    ViewData["Title"] = "Chỉnh sửa hồ sơ học sinh";
+}
+
+<div class="container mt-4">
+
+    <h2>Chỉnh sửa hồ sơ học sinh</h2>
+
+    <form asp-controller="Students"
+          asp-action="Edit"
+          asp-route-id="@Model.Id"
+          method="post">
+
+        <input asp-for="Id" type="hidden" />
+        <input asp-for="RowVersion" type="hidden" />
+
+        <div asp-validation-summary="All"
+             class="text-danger"></div>
+
+        <h4 class="mt-4">Thông tin học sinh</h4>
+
+        <div class="row">
+
+            <div class="col-md-6 mb-3">
+                <label class="form-label">
+                    Mã học sinh
+                </label>
+
+                <input value="@Model.Code"
+                       class="form-control"
+                       disabled />
+            </div>
+
+            <div class="col-md-6 mb-3">
+                <label class="form-label">
+                    Lớp học
+                </label>
+
+                <input value="@Model.ClassDisplay"
+                       class="form-control"
+                       disabled />
+            </div>
+
+            <div class="col-md-6 mb-3">
+                <label class="form-label">
+                    Họ tên học sinh
+                </label>
+
+                <input asp-for="FullName"
+                       class="form-control" />
+            </div>
+
+            <div class="col-md-6 mb-3">
+                <label class="form-label">
+                    Ngày sinh
+                </label>
+
+                <input asp-for="BirthDate"
+                       type="date"
+                       class="form-control" />
+            </div>
+
+            <div class="col-md-6 mb-3">
+                <label class="form-label">
+                    Giới tính
+                </label>
+
+                <select asp-for="Gender"
+                        class="form-select">
+                    <option value="M">Nam</option>
+                    <option value="F">Nữ</option>
+                    <option value="O">Khác</option>
+                </select>
+            </div>
+
+            <div class="col-md-6 mb-3">
+                <label class="form-label">
+                    Địa chỉ
+                </label>
+
+                <input asp-for="Address"
+                       class="form-control" />
+            </div>
+
+        </div>
+
+        <h4 class="mt-4">Người liên hệ chính</h4>
+
+        <div class="row">
+
+            <div class="col-md-6 mb-3">
+                <label class="form-label">
+                    Họ tên người liên hệ
+                </label>
+
+                <input asp-for="ContactFullName"
+                       class="form-control" />
+            </div>
+
+            <div class="col-md-6 mb-3">
+                <label class="form-label">
+                    Quan hệ với học sinh
+                </label>
+
+                <input asp-for="ContactRelationship"
+                       class="form-control" />
+            </div>
+
+            <div class="col-md-6 mb-3">
+                <label class="form-label">
+                    Số điện thoại
+                </label>
+
+                <input asp-for="ContactPhone"
+                       class="form-control" />
+            </div>
+
+        </div>
+
+        <button type="submit"
+                class="btn btn-success">
+            Lưu thay đổi
+        </button>
+
+        <a asp-controller="Students"
+           asp-action="Details"
+           asp-route-id="@Model.Id"
+           class="btn btn-secondary">
+            Hủy
+        </a>
+
+    </form>
+</div>

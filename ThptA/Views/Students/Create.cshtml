@@ -1,0 +1,107 @@
+﻿@model ThptA.ViewModels.StudentCreateVm
+
+@{
+    ViewData["Title"] = "Thêm hồ sơ học sinh";
+}
+
+<div class="container mt-4">
+    <h2>Thêm hồ sơ học sinh</h2>
+
+    <form asp-controller="Students"
+          asp-action="Create"
+          method="post">
+
+        <div asp-validation-summary="All"
+             class="text-danger"></div>
+
+        <h4 class="mt-4">Thông tin học sinh</h4>
+
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Mã học sinh</label>
+                <input asp-for="Code"
+                       class="form-control" />
+            </div>
+
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Họ tên học sinh</label>
+                <input asp-for="FullName"
+                       class="form-control" />
+            </div>
+
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Ngày sinh</label>
+                <input asp-for="BirthDate"
+                       type="date"
+                       class="form-control" />
+            </div>
+
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Giới tính</label>
+                <select asp-for="Gender"
+                        class="form-select">
+                    <option value="M">Nam</option>
+                    <option value="F">Nữ</option>
+                    <option value="O">Khác</option>
+                </select>
+            </div>
+
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Lớp học</label>
+                <select asp-for="ClassId"
+                        asp-items="Model.ClassOptions"
+                        class="form-select">
+                    <option value="0">-- Chọn lớp --</option>
+                </select>
+            </div>
+
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Địa chỉ</label>
+                <input asp-for="Address"
+                       class="form-control" />
+            </div>
+        </div>
+
+        <h4 class="mt-4">Người liên hệ chính</h4>
+
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Họ tên người liên hệ</label>
+                <input asp-for="ContactFullName"
+                       class="form-control" />
+            </div>
+
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Quan hệ</label>
+                <input asp-for="ContactRelationship"
+                       class="form-control"
+                       placeholder="Ví dụ: Bố, Mẹ, Người giám hộ" />
+            </div>
+
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Số điện thoại</label>
+                <input asp-for="ContactPhone"
+                       class="form-control" />
+            </div>
+        </div>
+
+        @if (Model.ClassOptions.Any())
+        {
+            <button type="submit"
+                    class="btn btn-success">
+                Lưu hồ sơ học sinh
+            </button>
+        }
+        else
+        {
+            <div class="alert alert-warning">
+                Bạn chưa có lớp được phép quản lý.
+            </div>
+        }
+
+        <a asp-action="Index"
+           class="btn btn-secondary">
+            Quay lại
+        </a>
+    </form>
+</div>

@@ -1,0 +1,105 @@
+﻿@model ThptA.Models.Student
+
+@{
+    ViewData["Title"] = "Chi tiết hồ sơ học sinh";
+}
+
+<div class="container mt-4">
+
+    <h2>Chi tiết hồ sơ học sinh</h2>
+
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            Thông tin học sinh
+        </div>
+
+        <div class="card-body">
+            <p>
+                <strong>Mã học sinh:</strong>
+                @Model.Code
+            </p>
+
+            <p>
+                <strong>Họ tên:</strong>
+                @Model.FullName
+            </p>
+
+            <p>
+                <strong>Ngày sinh:</strong>
+                @Model.BirthDate.ToString("dd/MM/yyyy")
+            </p>
+
+            <p>
+                <strong>Giới tính:</strong>
+                @(Model.Gender == "M" ? "Nam" :
+                  Model.Gender == "F" ? "Nữ" : "Khác")
+            </p>
+
+            <p>
+                <strong>Địa chỉ:</strong>
+                @Model.Address
+            </p>
+
+            <p>
+                <strong>Lớp học:</strong>
+                @Model.SchoolClass?.Name
+            </p>
+
+            <p>
+                <strong>Năm học:</strong>
+                @Model.SchoolClass?.AcademicYear?.Code
+            </p>
+
+            <p>
+                <strong>Trạng thái:</strong>
+                @(Model.Status == "Active"
+                    ? "Đang học" : "Ngừng học")
+            </p>
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-header bg-secondary text-white">
+            Người liên hệ chính
+        </div>
+
+        <div class="card-body">
+            @if (Model.PrimaryContact != null)
+            {
+                <p>
+                    <strong>Họ tên:</strong>
+                    @Model.PrimaryContact.FullName
+                </p>
+
+                <p>
+                    <strong>Quan hệ:</strong>
+                    @Model.PrimaryContact.Relationship
+                </p>
+
+                <p>
+                    <strong>Số điện thoại:</strong>
+                    @Model.PrimaryContact.Phone
+                </p>
+            }
+            else
+            {
+                <p>Chưa có thông tin người liên hệ.</p>
+            }
+        </div>
+    </div>
+
+    <a asp-controller="Students"
+       asp-action="Index"
+       class="btn btn-secondary">
+        Quay lại danh sách
+
+        <a asp-controller="Students"
+           asp-action="Edit"
+           asp-route-id="@Model.Id"
+           class="btn btn-warning me-2">
+            Chỉnh sửa hồ sơ
+        </a>
+
+    </a>
+
+</div>

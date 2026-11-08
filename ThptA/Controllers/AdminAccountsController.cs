@@ -1,4 +1,5 @@
 ﻿
+using ThptA.Data;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -10,13 +11,18 @@ namespace ThptA.Controllers
     [Authorize(Roles = "Admin")]
     public class AdminAccountsController : Controller
     {
+
         private readonly UserManager<AppUser> _userManager;
+        private readonly AppDbContext _db;
 
         public AdminAccountsController(
-            UserManager<AppUser> userManager)
+            UserManager<AppUser> userManager,
+            AppDbContext db)
         {
             _userManager = userManager;
+            _db = db;
         }
+
 
         // 1. Danh sách tài khoản giáo viên
         [HttpGet]
@@ -100,6 +106,10 @@ namespace ThptA.Controllers
                 return View(model);
             }
 
+            await WriteAuditAsync(
+                "CREATE_TEACHER",
+                teacher.UserName ?? teacher.Id);
+
             TempData["Success"] =
                 "Tạo tài khoản giáo viên thành công.";
 
@@ -158,6 +168,10 @@ namespace ThptA.Controllers
                 return View(model);
             }
 
+            await WriteAuditAsync(
+                "UPDATE_TEACHER",
+                teacher.UserName ?? teacher.Id);
+
             TempData["Success"] = "Cập nhật họ tên thành công.";
 
             return RedirectToAction(nameof(Index));
@@ -199,11 +213,42 @@ namespace ThptA.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
+            await WriteAuditAsync(
+                activate ? "ACTIVATE_TEACHER" : "DEACTIVATE_TEACHER",
+                teacher.UserName ?? teacher.Id);
+
+            await WriteAuditAsync(
+                activate ? "UNLOCK_TEACHER" : "LOCK_TEACHER",
+                teacher.UserName ?? teacher.Id);
+
             TempData["Success"] = activate
                 ? "Đã mở khóa tài khoản giáo viên."
                 : "Đã khóa tài khoản giáo viên.";
 
             return RedirectToAction(nameof(Index));
+        }
+
+        private async Task WriteAuditAsync(
+            string action,
+            string target)
+        {
+            var actorId = _userManager.GetUserId(User);
+
+            if (string.IsNullOrEmpty(actorId))
+            {
+                throw new InvalidOperationException(
+                    "Không xác định được người thực hiện.");
+            }
+
+            _db.AuditLogs.Add(new AuditLog
+            {
+                ActorId = actorId,
+                Action = action,
+                Target = target,
+                AtUtc = DateTime.UtcNow
+            });
+
+            await _db.SaveChangesAsync();
         }
 
     }

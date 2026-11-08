@@ -1,0 +1,141 @@
+﻿@model List<ThptA.Models.Student>
+
+@{
+    ViewData["Title"] = "Danh sách học sinh";
+}
+
+<div class="container mt-4">
+
+    <h2>Quản lý hồ sơ học sinh</h2>
+
+    <a asp-controller="Students"
+       asp-action="Create"
+       class="btn btn-success mb-3">
+        + Thêm học sinh
+    </a>
+
+    <p class="text-muted">
+        Tổng số học sinh: @ViewBag.TotalStudents
+    </p>
+
+    <form asp-controller="Students"
+          asp-action="Index"
+          method="get"
+          class="row g-2 mb-3">
+
+        <div class="col-md-8">
+            <input type="text"
+                   name="q"
+                   value="@ViewBag.Search"
+                   class="form-control"
+                   placeholder="Nhập mã hoặc họ tên học sinh..." />
+        </div>
+
+        <div class="col-md-4">
+            <button type="submit"
+                    class="btn btn-primary">
+                Tìm kiếm
+            </button>
+
+            <a asp-action="Index"
+               class="btn btn-secondary">
+                Làm mới
+            </a>
+        </div>
+    </form>
+
+    <div class="table-responsive">
+        <table class="table table-bordered table-striped">
+            <thead class="table-dark">
+                <tr>
+                    <th>Mã học sinh</th>
+                    <th>Họ tên</th>
+                    <th>Ngày sinh</th>
+                    <th>Giới tính</th>
+                    <th>Lớp</th>
+                    <th>Năm học</th>
+                    <th>Trạng thái</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                @foreach (var student in Model)
+                {
+                    <tr>
+
+                        <td>
+                            <a asp-controller="Students"
+                               asp-action="Details"
+                               asp-route-id="@student.Id">
+                                @student.Code
+                            </a>
+                        </td>
+
+                        <td>@student.FullName</td>
+
+                        <td>
+                            @student.BirthDate.ToString("dd/MM/yyyy")
+                        </td>
+
+                        <td>
+                            @(student.Gender == "M" ? "Nam" :
+                              student.Gender == "F" ? "Nữ" : "Khác")
+                        </td>
+
+                        <td>
+                            @(student.SchoolClass?.Name ?? "-")
+                        </td>
+
+                        <td>
+                            @(student.SchoolClass?.AcademicYear?.Code ?? "-")
+                        </td>
+
+                        <td>
+                            @if (student.Status == "Active")
+                            {
+                                <span class="badge bg-success">
+                                    Đang học
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary">
+                                    Ngừng học
+                                </span>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info">
+            Chưa có học sinh phù hợp để hiển thị.
+        </div>
+    }
+
+    @if ((int)ViewBag.TotalPages > 1)
+    {
+        <nav>
+            <ul class="pagination">
+                @for (int i = 1;
+                      i <= (int)ViewBag.TotalPages;
+                      i++)
+                {
+                    <li class="page-item @(i == (int)ViewBag.Page ? "active" : "")">
+                        <a class="page-link"
+                           asp-action="Index"
+                           asp-route-page="@i"
+                           asp-route-q="@ViewBag.Search">
+                            @i
+                        </a>
+                    </li>
+                }
+            </ul>
+        </nav>
+    }
+
+</div>
