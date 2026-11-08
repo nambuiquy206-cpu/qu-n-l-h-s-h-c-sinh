@@ -1,0 +1,114 @@
+﻿@model ThptA.ViewModels.FeePaymentHistoryVm
+
+@{
+    ViewData["Title"] = "Lịch sử đóng tiền";
+}
+
+<div class="container mt-4">
+
+    <h2 class="mb-4">Lịch sử đóng tiền học sinh</h2>
+
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            Thông tin khoản thu
+        </div>
+
+        <div class="card-body">
+            <p>
+                <strong>Học sinh:</strong>
+                @Model.StudentDisplay
+            </p>
+
+            <p>
+                <strong>Khoản thu:</strong>
+                @Model.FeeTitle
+            </p>
+
+            <p>
+                <strong>Năm học:</strong>
+                @Model.YearCode
+            </p>
+
+            <p>
+                <strong>Phải đóng:</strong>
+                @Model.AmountDue.ToString("N0") đ
+            </p>
+
+            <p class="text-success">
+                <strong>Đã đóng:</strong>
+                @Model.PaidAmount.ToString("N0") đ
+            </p>
+
+            <p class="text-danger">
+                <strong>Còn thiếu:</strong>
+                @Model.RemainingAmount.ToString("N0") đ
+            </p>
+        </div>
+    </div>
+
+    <h4>Chi tiết các lần đóng tiền</h4>
+
+    <div class="table-responsive">
+        <table class="table table-bordered table-striped">
+
+            <thead class="table-dark">
+                <tr>
+                    <th>STT</th>
+                    <th>Ngày giờ đóng</th>
+                    <th>Số tiền</th>
+                    <th>Người ghi nhận</th>
+                    <th>Ghi chú</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                @{
+                    int stt = 1;
+                }
+
+                @foreach (var payment in Model.Payments)
+                {
+                    <tr>
+                        <td>@(stt++)</td>
+
+                        <td>
+                            @payment.PaidAtUtc.AddHours(7)
+                            .ToString("dd/MM/yyyy HH:mm")
+                        </td>
+
+                        <td class="text-success fw-bold">
+                            @payment.Amount.ToString("N0") đ
+                        </td>
+
+                        <td>@payment.RecordedBy</td>
+
+                        <td>
+                            @(string.IsNullOrWhiteSpace(payment.Note)
+                                ? "Không có ghi chú"
+                                : payment.Note)
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <p class="text-muted small">
+        Thời gian hiển thị theo giờ Việt Nam (UTC+7).
+    </p>
+
+    @if (!Model.Payments.Any())
+    {
+        <div class="alert alert-info">
+            Chưa có lần đóng tiền nào.
+        </div>
+    }
+
+    <a asp-controller="StudentFees"
+       asp-action="Index"
+       asp-route-studentId="@Model.StudentId"
+       class="btn btn-secondary">
+        Quay lại danh sách khoản thu
+    </a>
+
+</div>

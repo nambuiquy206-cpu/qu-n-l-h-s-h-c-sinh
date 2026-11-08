@@ -329,5 +329,84 @@ namespace ThptA.Controllers
                 new { studentId = fee.StudentId });
         }
 
+        // Xem lịch sử đóng tiền của một khoản thu
+        [HttpGet]
+        public async Task<IActionResult> History(int studentFeeId)
+        {
+            if (studentFeeId <= 0)
+                return NotFound();
+
+            var fee = await _db.StudentFees
+                .AsNoTracking()
+                .Include(f => f.Student)
+                .Include(f => f.AcademicYear)
+                .FirstOrDefaultAsync(f => f.Id == studentFeeId);
+
+            if (fee == null)
+                return NotFound();
+
+            var payments = await _db.FeePayments
+                .AsNoTracking()
+                .Where(p => p.StudentFeeId == studentFeeId)
+                .OrderByDescending(p => p.PaidAtUtc)
+                .ThenByDescending(p => p.Id)
+                .ToListAsync();
+
+            // Lấy tài khoản đã ghi nhận tiền
+            var actorIds = payments
+                .Select(p => p.RecordedById)
+                .Distinct()
+                .ToList();
+
+            var actors = await _db.Users
+                .AsNoTracking()
+                .Where(u => actorIds.Contains(u.Id))
+                .Select(u => new
+                {
+                    u.Id,
+                    u.FullName,
+                    u.UserName
+                })
+                .ToDictionaryAsync(
+                    u => u.Id,
+                    u => !string.IsNullOrWhiteSpace(u.FullName)
+                        ? u.FullName
+                        : u.UserName ?? u.Id);
+
+            var paid = payments.Sum(p => p.Amount);
+
+            var model = new FeePaymentHistoryVm
+            {
+                StudentId = fee.StudentId,
+
+                StudentDisplay =
+                    $"{fee.Student.Code} - {fee.Student.FullName}",
+
+                FeeTitle = fee.Title,
+                YearCode = fee.AcademicYear.Code,
+                AmountDue = fee.AmountDue,
+                PaidAmount = paid,
+                RemainingAmount = fee.AmountDue - paid,
+
+                Payments = payments.Select(p =>
+                    new FeePaymentHistoryRowVm
+                    {
+                        Id = p.Id,
+                        Amount = p.Amount,
+                        PaidAtUtc = p.PaidAtUtc,
+
+                        RecordedBy = actors.TryGetValue(
+                            p.RecordedById, out var actor)
+                            ? actor
+                            : "Không tìm thấy tài khoản",
+
+                        Note = p.Note
+                    })
+                    .ToList()
+            };
+
+            return View(model);
+        }
+
     }
 }
