@@ -1,0 +1,168 @@
+﻿@model ThptA.ViewModels.StudentStatisticsVm
+
+@{
+    ViewData["Title"] = "Thống kê hồ sơ học sinh";
+}
+
+<div class="container mt-4">
+
+    <h2 class="mb-4">Thống kê hồ sơ học sinh</h2>
+
+    <form asp-controller="StudentStatistics"
+          asp-action="Index"
+          method="get"
+          class="mb-4">
+
+        <div class="row g-2 align-items-end">
+            <div class="col-md-5">
+                <label class="form-label">Năm học</label>
+
+                <select asp-for="YearId"
+                        asp-items="Model.YearOptions"
+                        class="form-select">
+                    <option value="">Tất cả năm học</option>
+                </select>
+            </div>
+
+            <div class="col-md-3">
+                <button type="submit"
+                        class="btn btn-primary">
+                    Xem thống kê
+                </button>
+            </div>
+        </div>
+    </form>
+
+    <!-- THỐNG KÊ TỔNG QUAN -->
+    <div class="row g-3 mb-4">
+
+        <div class="col-md-4">
+            <div class="card border-primary">
+                <div class="card-body">
+                    <h6>Tổng số học sinh</h6>
+                    <h2 class="text-primary">@Model.Total</h2>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card border-info">
+                <div class="card-body">
+                    <h6>Học sinh nam</h6>
+                    <h2>@Model.Male</h2>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card border-info">
+                <div class="card-body">
+                    <h6>Học sinh nữ</h6>
+                    <h2>@Model.Female</h2>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card border-secondary">
+                <div class="card-body">
+                    <h6>Giới tính khác</h6>
+                    <h2>@Model.Other</h2>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card border-success">
+                <div class="card-body">
+                    <h6>Đang học</h6>
+                    <h2 class="text-success">@Model.Active</h2>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card border-danger">
+                <div class="card-body">
+                    <h6>Ngừng học</h6>
+                    <h2 class="text-danger">@Model.Inactive</h2>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- THỐNG KÊ THEO KHỐI -->
+    <h4 class="mt-4">Thống kê theo khối</h4>
+
+    <div class="table-responsive">
+        <table class="table table-bordered table-striped">
+
+            <thead class="table-dark">
+                <tr>
+                    <th>Khối</th>
+                    <th>Tổng học sinh</th>
+                    <th>Đang học</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                @foreach (var item in Model.ByGrade)
+                {
+                    <tr>
+                        <td>Khối @item.Grade</td>
+                        <td>@item.Total</td>
+                        <td>@item.Active</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <!-- THỐNG KÊ THEO LỚP -->
+    <h4 class="mt-4">Thống kê theo lớp</h4>
+
+    <div class="table-responsive">
+        <table class="table table-bordered table-striped">
+
+            <thead class="table-dark">
+                <tr>
+                    <th>Lớp</th>
+                    <th>Năm học</th>
+                    <th>Tổng HS</th>
+                    <th>Nam</th>
+                    <th>Nữ</th>
+                    <th>Đang học</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                @foreach (var item in Model.ByClass)
+                {
+                    <tr>
+                        <td>@item.ClassName</td>
+                        <td>@item.YearCode</td>
+                        <td>@item.Total</td>
+                        <td>@item.Male</td>
+                        <td>@item.Female</td>
+                        <td>@item.Active</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    @if (!Model.ByClass.Any())
+    {
+        <div class="alert alert-info">
+            Chưa có dữ liệu học sinh để thống kê.
+        </div>
+    }
+
+    <a asp-controller="Students"
+       asp-action="Index"
+       class="btn btn-secondary mt-3">
+        Quay lại quản lý học sinh
+    </a>
+
+</div>

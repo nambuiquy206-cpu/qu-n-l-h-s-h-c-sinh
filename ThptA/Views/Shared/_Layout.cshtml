@@ -76,6 +76,17 @@
                             </li>
                         }
 
+                        @if (User.IsInRole("Admin") || User.IsInRole("Teacher"))
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-dark"
+                                   asp-controller="StudentStatistics"
+                                   asp-action="Index">
+                                    Thống kê học sinh
+                                </a>
+                            </li>
+                        }
+                      
                     </ul>
                 </div>
             </div>
