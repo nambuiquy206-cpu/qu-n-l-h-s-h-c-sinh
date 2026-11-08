@@ -27,6 +27,7 @@
                 <th>Khối</th>
                 <th>Năm học</th>
                 <th>Giáo viên chủ nhiệm</th>
+                <th>Thao tác</th>
             </tr>
         </thead>
 
@@ -41,6 +42,16 @@
                         @(item.Teacher?.FullName
                           ?? "Chưa phân công")
                     </td>
+
+                    <td>
+                        <a asp-controller="SchoolClasses"
+                           asp-action="AssignTeacher"
+                           asp-route-id="@item.Id"
+                           class="btn btn-warning btn-sm">
+                            Phân công GVCN
+                        </a>
+                    </td>
+
                 </tr>
             }
         </tbody>

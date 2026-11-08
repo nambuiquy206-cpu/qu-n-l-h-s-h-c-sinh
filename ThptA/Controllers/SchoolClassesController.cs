@@ -168,5 +168,205 @@ namespace ThptA.Controllers
                 })
                 .ToListAsync();
         }
+
+        // Hiển thị trang phân công GVCN
+        [HttpGet]
+        public async Task<IActionResult> AssignTeacher(int id)
+        {
+            if (id <= 0)
+                return NotFound();
+
+            var schoolClass = await _db.SchoolClasses
+                .AsNoTracking()
+                .Include(c => c.AcademicYear)
+                .FirstOrDefaultAsync(c => c.Id == id);
+
+            if (schoolClass == null)
+                return NotFound();
+
+            var model = new SchoolClassAssignTeacherVm
+            {
+                Id = schoolClass.Id,
+                ClassName = schoolClass.Name,
+                AcademicYearCode =
+                    schoolClass.AcademicYear?.Code ?? "",
+                TeacherId = schoolClass.TeacherId,
+                RowVersion = Convert.ToBase64String(
+                    schoolClass.RowVersion)
+            };
+
+            await LoadTeachersAsync(model);
+
+            return View(model);
+        }
+
+        // Lưu phân công GVCN
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AssignTeacher(
+            int id, SchoolClassAssignTeacherVm model)
+        {
+            if (id <= 0 || id != model.Id)
+                return BadRequest();
+
+            var schoolClass = await _db.SchoolClasses
+                .Include(c => c.AcademicYear)
+                .FirstOrDefaultAsync(c => c.Id == id);
+
+            if (schoolClass == null)
+                return NotFound();
+
+            model.ClassName = schoolClass.Name;
+            model.AcademicYearCode =
+                schoolClass.AcademicYear?.Code ?? "";
+
+            model.TeacherId = string.IsNullOrWhiteSpace(
+                model.TeacherId)
+                ? null
+                : model.TeacherId.Trim();
+
+            if (model.TeacherId != null)
+            {
+                var teacher = await _userManager
+                    .FindByIdAsync(model.TeacherId);
+
+                if (teacher == null ||
+                    !teacher.IsActive ||
+                    !await _userManager.IsInRoleAsync(
+                        teacher, "Teacher"))
+                {
+                    ModelState.AddModelError(
+                        nameof(model.TeacherId),
+                        "Giáo viên không hợp lệ hoặc đã bị khóa.");
+                }
+                else
+                {
+                    // Không phân công 1 GVCN cho 2 lớp
+                    // trong cùng một năm học
+                    var alreadyAssigned =
+                        await _db.SchoolClasses.AnyAsync(c =>
+                            c.Id != schoolClass.Id &&
+                            c.AcademicYearId ==
+                                schoolClass.AcademicYearId &&
+                            c.TeacherId == model.TeacherId);
+
+                    if (alreadyAssigned)
+                    {
+                        ModelState.AddModelError(
+                            nameof(model.TeacherId),
+                            "Giáo viên đã chủ nhiệm một lớp " +
+                            "khác trong cùng năm học.");
+                    }
+                }
+            }
+
+            byte[] originalVersion = Array.Empty<byte>();
+
+            try
+            {
+                originalVersion =
+                    Convert.FromBase64String(model.RowVersion);
+
+                if (originalVersion.Length != 8)
+                    throw new FormatException();
+            }
+            catch (FormatException)
+            {
+                ModelState.AddModelError(
+                    "",
+                    "Phiên bản dữ liệu không hợp lệ. " +
+                    "Vui lòng tải lại trang.");
+            }
+
+            if (!ModelState.IsValid)
+            {
+                await LoadTeachersAsync(model);
+                return View(model);
+            }
+
+            // Kiểm tra thay đổi đồng thời
+            _db.Entry(schoolClass)
+                .Property(c => c.RowVersion)
+                .OriginalValue = originalVersion;
+
+            if (schoolClass.TeacherId == model.TeacherId)
+            {
+                TempData["Success"] =
+                    "Phân công giáo viên không thay đổi.";
+
+                return RedirectToAction(nameof(Index));
+            }
+
+            var actorId = _userManager.GetUserId(User);
+
+            if (string.IsNullOrEmpty(actorId))
+                return Challenge();
+
+            schoolClass.TeacherId = model.TeacherId;
+
+            _db.AuditLogs.Add(new AuditLog
+            {
+                ActorId = actorId,
+                Action = model.TeacherId == null
+                    ? "UNASSIGN_TEACHER"
+                    : "ASSIGN_TEACHER",
+                Target = schoolClass.Name,
+                AtUtc = DateTime.UtcNow
+            });
+
+            try
+            {
+                await _db.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                ModelState.AddModelError(
+                    "",
+                    "Lớp học đã được người khác cập nhật. " +
+                    "Vui lòng tải lại trang.");
+
+                await LoadTeachersAsync(model);
+                return View(model);
+            }
+            catch (DbUpdateException)
+            {
+                ModelState.AddModelError(
+                    "",
+                    "Không thể lưu phân công. " +
+                    "Vui lòng kiểm tra giáo viên có đang " +
+                    "chủ nhiệm lớp khác trong năm học không.");
+
+                await LoadTeachersAsync(model);
+                return View(model);
+            }
+
+            TempData["Success"] =
+                model.TeacherId == null
+                    ? "Đã hủy phân công GVCN."
+                    : "Phân công GVCN thành công.";
+
+            return RedirectToAction(nameof(Index));
+        }
+
+        // Lấy danh sách tài khoản giáo viên
+        private async Task LoadTeachersAsync(
+            SchoolClassAssignTeacherVm model)
+        {
+            var teachers = await _userManager
+                .GetUsersInRoleAsync("Teacher");
+
+            model.TeacherOptions = teachers
+                .Where(t => t.IsActive ||
+                    t.Id == model.TeacherId)
+                .OrderBy(t => t.FullName)
+                .Select(t => new SelectListItem
+                {
+                    Value = t.Id,
+                    Text = $"{t.FullName} ({t.UserName})" +
+                        (t.IsActive ? "" : " - Đã khóa")
+                })
+                .ToList();
+        }
+
     }
 }

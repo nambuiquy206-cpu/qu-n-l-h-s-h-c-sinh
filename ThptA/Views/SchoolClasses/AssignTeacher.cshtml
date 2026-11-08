@@ -1,0 +1,75 @@
+﻿
+@model ThptA.ViewModels.SchoolClassAssignTeacherVm
+
+@{
+    ViewData["Title"] = "Phân công giáo viên chủ nhiệm";
+}
+
+<div class="container mt-4">
+
+    <h2>Phân công giáo viên chủ nhiệm</h2>
+
+    <div class="card mt-4">
+
+        <div class="card-header bg-primary text-white">
+            Thông tin lớp học
+        </div>
+
+        <div class="card-body">
+
+            <p>
+                <strong>Tên lớp:</strong>
+                @Model.ClassName
+            </p>
+
+            <p>
+                <strong>Năm học:</strong>
+                @Model.AcademicYearCode
+            </p>
+
+            <form asp-controller="SchoolClasses"
+                  asp-action="AssignTeacher"
+                  asp-route-id="@Model.Id"
+                  method="post">
+
+                <input asp-for="Id" type="hidden" />
+                <input asp-for="RowVersion"
+                       type="hidden" />
+
+                <div asp-validation-summary="All"
+                     class="text-danger"></div>
+
+                <div class="mb-3">
+                    <label class="form-label">
+                        Chọn giáo viên chủ nhiệm
+                    </label>
+
+                    <select asp-for="TeacherId"
+                            asp-items="Model.TeacherOptions"
+                            class="form-select">
+
+                        <option value="">
+                            -- Chưa phân công --
+                        </option>
+
+                    </select>
+
+                    <span asp-validation-for="TeacherId"
+                          class="text-danger"></span>
+                </div>
+
+                <button type="submit"
+                        class="btn btn-success">
+                    Lưu phân công
+                </button>
+
+                <a asp-controller="SchoolClasses"
+                   asp-action="Index"
+                   class="btn btn-secondary">
+                    Quay lại
+                </a>
+
+            </form>
+        </div>
+    </div>
+</div>
