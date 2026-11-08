@@ -252,5 +252,161 @@ namespace ThptA.Controllers
                 .ToListAsync();
         }
 
+        // Hiển thị giao diện chỉnh sửa tiết học
+        [HttpGet]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> Edit(int id)
+        {
+            if (id <= 0)
+                return NotFound();
+
+            var entry = await _db.TimetableEntries
+                .AsNoTracking()
+                .Include(t => t.SchoolClass)
+                    .ThenInclude(c => c.AcademicYear)
+                .FirstOrDefaultAsync(t => t.Id == id);
+
+            if (entry == null)
+                return NotFound();
+
+            var model = new TimetableEditVm
+            {
+                Id = entry.Id,
+                ClassDisplay =
+                    $"{entry.SchoolClass.Name} - " +
+                    $"{entry.SchoolClass.AcademicYear?.Code}",
+                DayOfWeek = entry.DayOfWeek,
+                Period = entry.Period,
+                SubjectName = entry.SubjectName,
+                TeacherName = entry.TeacherName,
+                Room = entry.Room
+            };
+
+            return View(model);
+        }
+
+        // Lưu thông tin tiết học đã sửa
+        [HttpPost]
+        [Authorize(Roles = "Admin")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(
+            int id, TimetableEditVm model)
+        {
+            if (id <= 0 || id != model.Id)
+                return BadRequest();
+
+            var entry = await _db.TimetableEntries
+                .Include(t => t.SchoolClass)
+                    .ThenInclude(c => c.AcademicYear)
+                .FirstOrDefaultAsync(t => t.Id == id);
+
+            if (entry == null)
+                return NotFound();
+
+            // Lấy lại thông tin lớp và vị trí tiết từ DB
+            model.ClassDisplay =
+                $"{entry.SchoolClass.Name} - " +
+                $"{entry.SchoolClass.AcademicYear?.Code}";
+
+            model.DayOfWeek = entry.DayOfWeek;
+            model.Period = entry.Period;
+
+            if (string.IsNullOrWhiteSpace(model.SubjectName))
+            {
+                ModelState.AddModelError(
+                    nameof(model.SubjectName),
+                    "Vui lòng nhập tên môn học.");
+            }
+
+            if (!ModelState.IsValid)
+                return View(model);
+
+            var actorId = _userManager.GetUserId(User);
+
+            if (string.IsNullOrEmpty(actorId))
+                return Challenge();
+
+            entry.SubjectName = model.SubjectName.Trim();
+
+            entry.TeacherName =
+                string.IsNullOrWhiteSpace(model.TeacherName)
+                    ? null
+                    : model.TeacherName.Trim();
+
+            entry.Room =
+                string.IsNullOrWhiteSpace(model.Room)
+                    ? null
+                    : model.Room.Trim();
+
+            // Ghi nhật ký chỉnh sửa
+            _db.AuditLogs.Add(new AuditLog
+            {
+                ActorId = actorId,
+                Action = "UPDATE_TIMETABLE",
+                Target =
+                    $"{entry.SchoolClass.Name} - " +
+                    $"Thứ {entry.DayOfWeek}, " +
+                    $"tiết {entry.Period}",
+                AtUtc = DateTime.UtcNow
+            });
+
+            await _db.SaveChangesAsync();
+
+            TempData["Success"] =
+                "Chỉnh sửa tiết học thành công.";
+
+            return RedirectToAction(
+                nameof(Index),
+                new { schoolClassId = entry.SchoolClassId });
+        }
+
+        // Xóa tiết học - chỉ Admin
+        [HttpPost]
+        [Authorize(Roles = "Admin")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Delete(int id)
+        {
+            if (id <= 0)
+                return NotFound();
+
+            var entry = await _db.TimetableEntries
+                .Include(t => t.SchoolClass)
+                .FirstOrDefaultAsync(t => t.Id == id);
+
+            if (entry == null)
+                return NotFound();
+
+            var actorId = _userManager.GetUserId(User);
+
+            if (string.IsNullOrEmpty(actorId))
+                return Challenge();
+
+            int schoolClassId = entry.SchoolClassId;
+
+            // Ghi nhật ký trước khi xóa
+            _db.AuditLogs.Add(new AuditLog
+            {
+                ActorId = actorId,
+                Action = "DELETE_TIMETABLE",
+                Target =
+                    $"{entry.SchoolClass.Name} - " +
+                    $"Thứ {entry.DayOfWeek}, " +
+                    $"tiết {entry.Period}: " +
+                    entry.SubjectName,
+                AtUtc = DateTime.UtcNow
+            });
+
+            _db.TimetableEntries.Remove(entry);
+
+            await _db.SaveChangesAsync();
+
+            TempData["Success"] =
+                "Đã xóa tiết học khỏi thời khóa biểu.";
+
+            return RedirectToAction(
+                nameof(Index),
+                new { schoolClassId });
+        }
+
     }
 }

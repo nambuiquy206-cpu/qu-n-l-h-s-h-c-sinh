@@ -1,0 +1,85 @@
+﻿@model ThptA.ViewModels.TimetableEditVm
+
+@{
+    ViewData["Title"] = "Chỉnh sửa tiết học";
+}
+
+<div class="container mt-4">
+
+    <h2 class="mb-4">Chỉnh sửa tiết học</h2>
+
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            Thông tin tiết học
+        </div>
+
+        <div class="card-body">
+            <p>
+                <strong>Lớp:</strong>
+                @Model.ClassDisplay
+            </p>
+
+            <p>
+                <strong>Thứ:</strong>
+                Thứ @Model.DayOfWeek
+            </p>
+
+            <p>
+                <strong>Tiết:</strong>
+                Tiết @Model.Period
+            </p>
+        </div>
+    </div>
+
+    <form asp-controller="Timetables"
+          asp-action="Edit"
+          asp-route-id="@Model.Id"
+          method="post">
+
+        <input asp-for="Id" type="hidden" />
+
+        <div asp-validation-summary="All"
+             class="text-danger"></div>
+
+        <div class="mb-3">
+            <label class="form-label">
+                Tên môn học
+            </label>
+
+            <input asp-for="SubjectName"
+                   class="form-control" />
+
+            <span asp-validation-for="SubjectName"
+                  class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">
+                Giáo viên bộ môn
+            </label>
+
+            <input asp-for="TeacherName"
+                   class="form-control" />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">
+                Phòng học
+            </label>
+
+            <input asp-for="Room"
+                   class="form-control" />
+        </div>
+
+        <button type="submit"
+                class="btn btn-success">
+            Lưu thay đổi
+        </button>
+
+        <a asp-controller="Timetables"
+           asp-action="Index"
+           class="btn btn-secondary">
+            Quay lại
+        </a>
+    </form>
+</div>

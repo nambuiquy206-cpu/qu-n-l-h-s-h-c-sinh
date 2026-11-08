@@ -108,6 +108,33 @@
                                                 Phòng: @entry.Room
                                             </div>
                                         }
+
+                                        @if (User.IsInRole("Admin"))
+                                        {
+                                            <div class="mt-2 d-flex gap-1 justify-content-center flex-wrap">
+
+                                                <a asp-controller="Timetables"
+                                                   asp-action="Edit"
+                                                   asp-route-id="@entry.Id"
+                                                   class="btn btn-warning btn-sm">
+                                                    Sửa
+                                                </a>
+
+                                                <form asp-controller="Timetables"
+                                                      asp-action="Delete"
+                                                      asp-route-id="@entry.Id"
+                                                      method="post"
+                                                      class="d-inline">
+
+                                                    <button type="submit"
+                                                            class="btn btn-danger btn-sm"
+                                                            onclick="return confirm('Bạn chắc chắn muốn xóa tiết học này?')">
+                                                        Xóa
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        }
+
                                     }
                                     else
                                     {
