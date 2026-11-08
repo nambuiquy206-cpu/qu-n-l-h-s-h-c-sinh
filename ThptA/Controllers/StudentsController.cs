@@ -26,6 +26,7 @@ namespace ThptA.Controllers
 
         // Xem danh sách và tìm kiếm học sinh
 
+
         [HttpGet]
         public async Task<IActionResult> Index(
             string? q,
@@ -33,7 +34,9 @@ namespace ThptA.Controllers
             int? grade,
             int? classId,
             string? status,
+            bool onlyMissingContact = false,
             int page = 1)
+
         {
             const int pageSize = 20;
 
@@ -98,6 +101,15 @@ namespace ThptA.Controllers
             {
                 query = query.Where(s =>
                     s.Status == status);
+            }
+
+            // 8. Chỉ hiện hồ sơ thiếu SĐT liên hệ
+            if (onlyMissingContact)
+            {
+                query = query.Where(s =>
+                    s.PrimaryContact == null ||
+                    s.PrimaryContact.Phone == null ||
+                    s.PrimaryContact.Phone.Trim() == "");
             }
 
             // 8. Lấy danh sách năm học
@@ -192,6 +204,7 @@ namespace ThptA.Controllers
             {
                 Q = q,
                 YearId = yearId,
+                OnlyMissingContact = onlyMissingContact,
                 Grade = grade,
                 ClassId = classId,
                 Status = status,

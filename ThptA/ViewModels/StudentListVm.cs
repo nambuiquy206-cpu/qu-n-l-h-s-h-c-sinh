@@ -13,6 +13,8 @@ namespace ThptA.ViewModels
         public int? ClassId { get; set; }
         public string? Status { get; set; }
 
+        public bool OnlyMissingContact { get; set; }
+
         // Dữ liệu hiển thị
         public List<Student> Students { get; set; } = new();
 

@@ -102,6 +102,16 @@
 
                 </div>
 
+                <div class="form-check mt-3">
+                    <input asp-for="OnlyMissingContact"
+                           class="form-check-input" />
+
+                    <label asp-for="OnlyMissingContact"
+                           class="form-check-label">
+                        Chỉ hiển thị hồ sơ thiếu số điện thoại liên hệ
+                    </label>
+                </div>
+
                 <div class="mt-3">
                     <button type="submit"
                             class="btn btn-primary">
@@ -283,7 +293,7 @@
                 {
                     <li class="page-item @(p == Model.Page ? "active" : "")">
 
-                        <a class="page-link"
+                        <aasp-route-onlyMissingContact class="page-link"
                            asp-action="Index"
                            asp-route-page="@p"
                            asp-route-q="@Model.Q"
@@ -292,7 +302,7 @@
                            asp-route-classId="@Model.ClassId"
                            asp-route-status="@Model.Status">
                             @p
-                        </a>
+                        </aasp-route-onlyMissingContact="@Model.OnlyMissingContact">
 
                     </li>
                 }
