@@ -8,6 +8,17 @@
 
     <h2 class="mb-4">Quản lý hồ sơ học sinh</h2>
 
+    @if (User.IsInRole("Admin"))
+    {
+        <div class="mb-3">
+            <a asp-controller="StudentFeeStatistics"
+               asp-action="Index"
+               class="btn btn-outline-dark">
+                Thống kê khoản thu toàn trường
+            </a>
+        </div>
+    }
+
     <a asp-controller="Students"
        asp-action="Create"
        class="btn btn-primary mb-3">

@@ -1,0 +1,205 @@
+﻿@model ThptA.ViewModels.StudentFeeStatisticsVm
+
+@{
+    ViewData["Title"] = "Thống kê khoản thu";
+}
+
+<div class="container mt-4">
+
+    <h2 class="mb-4">
+        Thống kê tình trạng đóng tiền toàn trường
+    </h2>
+
+    <form asp-controller="StudentFeeStatistics"
+          asp-action="Index"
+          method="get"
+          class="row g-3 mb-4">
+
+        <div class="col-md-5">
+            <label class="form-label">
+                Chọn năm học
+            </label>
+
+            <select asp-for="AcademicYearId"
+                    asp-items="Model.AcademicYears"
+                    class="form-select">
+            </select>
+        </div>
+
+        <div class="col-md-3 d-flex align-items-end">
+            <button type="submit"
+                    class="btn btn-primary">
+                Xem thống kê
+            </button>
+        </div>
+    </form>
+
+    @if (Model.AcademicYearId == null)
+    {
+        <div class="alert alert-info">
+            Chưa có năm học để thống kê.
+        </div>
+    }
+    else
+    {
+        <h5 class="mb-3">
+            Năm học: @Model.AcademicYearCode
+        </h5>
+
+        <!-- BA THẺ THỐNG KÊ -->
+        <div class="row g-3 mb-4">
+
+            <div class="col-md-4">
+                <div class="card border-primary h-100">
+                    <div class="card-body">
+                        <h6 class="text-muted">
+                            Tổng tiền phải thu
+                        </h6>
+
+                        <h3 class="text-primary">
+                            @Model.TotalDue.ToString("N0") đ
+                        </h3>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card border-success h-100">
+                    <div class="card-body">
+                        <h6 class="text-muted">
+                            Tổng tiền đã thu
+                        </h6>
+
+                        <h3 class="text-success">
+                            @Model.TotalPaid.ToString("N0") đ
+                        </h3>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card border-danger h-100">
+                    <div class="card-body">
+                        <h6 class="text-muted">
+                            Tổng tiền còn thiếu
+                        </h6>
+
+                        <h3 class="text-danger">
+                            @Model.TotalRemaining.ToString("N0") đ
+                        </h3>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- THỐNG KÊ SỐ LƯỢNG -->
+        <div class="alert alert-secondary">
+            <strong>Tổng số khoản thu:</strong>
+            @Model.TotalFeeCount
+
+            <span class="mx-2">|</span>
+
+            <strong>Khoản chưa đóng đủ:</strong>
+            @Model.UnsettledFeeCount
+
+            <span class="mx-2">|</span>
+
+            <strong>Khoản quá hạn:</strong>
+            @Model.OverdueFeeCount
+
+            <span class="mx-2">|</span>
+
+            <strong>Học sinh còn nợ:</strong>
+            @Model.Debtors.Count
+        </div>
+
+        <!-- DANH SÁCH HỌC SINH CÒN NỢ -->
+        <h4 class="mb-3">
+            Danh sách học sinh chưa đóng đủ
+        </h4>
+
+        <div class="table-responsive">
+
+            <table class="table table-bordered table-striped">
+
+                <thead class="table-dark">
+                    <tr>
+                        <th>STT</th>
+                        <th>Mã HS</th>
+                        <th>Họ tên</th>
+                        <th>Lớp hiện tại</th>
+                        <th>Phải đóng</th>
+                        <th>Đã đóng</th>
+                        <th>Còn thiếu</th>
+                        <th>Khoản quá hạn</th>
+                        <th>Thao tác</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    @{
+                        int stt = 1;
+                    }
+
+                    @foreach (var student in Model.Debtors)
+                    {
+                        <tr>
+                            <td>@(stt++)</td>
+
+                            <td>@student.StudentCode</td>
+
+                            <td>@student.StudentName</td>
+
+                            <td>@student.ClassName</td>
+
+                            <td>
+                                @student.TotalDue.ToString("N0") đ
+                            </td>
+
+                            <td class="text-success">
+                                @student.TotalPaid.ToString("N0") đ
+                            </td>
+
+                            <td class="text-danger fw-bold">
+                                @student.TotalRemaining.ToString("N0") đ
+                            </td>
+
+                            <td>
+                                @if (student.OverdueFeeCount > 0)
+                                {
+                                    <span class="badge bg-danger">
+                                        @student.OverdueFeeCount
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span>0</span>
+                                }
+                            </td>
+
+                            <td>
+                                <a asp-controller="StudentFees"
+                                   asp-action="Index"
+                                   asp-route-studentId="@student.StudentId"
+                                   class="btn btn-outline-primary btn-sm">
+                                    Xem khoản thu
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+
+            </table>
+        </div>
+
+        @if (!Model.Debtors.Any())
+        {
+            <div class="alert alert-success">
+                Không có học sinh nào còn nợ
+                trong năm học này.
+            </div>
+        }
+    }
+
+</div>
