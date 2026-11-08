@@ -150,6 +150,16 @@
                 </form>
             }
 
+            @if (User.IsInRole("Admin"))
+            {
+                <a asp-controller="Students"
+                   asp-action="TransferClass"
+                   asp-route-id="@Model.Id"
+                   class="btn btn-primary me-2">
+                    Chuyển lớp
+                </a>
+            }
+
            Chỉnh sửa hồ sơ
         </a>
 

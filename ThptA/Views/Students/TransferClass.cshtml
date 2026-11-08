@@ -1,0 +1,94 @@
+﻿@model ThptA.ViewModels.StudentTransferVm
+
+@{
+    ViewData["Title"] = "Chuyển lớp học sinh";
+}
+
+<div class="container mt-4">
+
+    <h2 class="mb-4">Chuyển lớp học sinh</h2>
+
+    <div class="card mb-4">
+
+        <div class="card-header bg-primary text-white">
+            Thông tin học sinh
+        </div>
+
+        <div class="card-body">
+
+            <p>
+                <strong>Mã học sinh:</strong>
+                @Model.StudentCode
+            </p>
+
+            <p>
+                <strong>Họ tên:</strong>
+                @Model.StudentName
+            </p>
+
+            <p>
+                <strong>Lớp hiện tại:</strong>
+                @Model.CurrentClassName
+            </p>
+
+            <p>
+                <strong>Năm học:</strong>
+                @Model.AcademicYearCode
+            </p>
+
+        </div>
+    </div>
+
+    <form asp-controller="Students"
+          asp-action="TransferClass"
+          asp-route-id="@Model.StudentId"
+          method="post">
+
+        <input asp-for="StudentId" type="hidden" />
+        <input asp-for="RowVersion" type="hidden" />
+
+        <div asp-validation-summary="All"
+             class="text-danger"></div>
+
+        <div class="mb-3">
+            <label class="form-label">
+                Chọn lớp chuyển đến
+            </label>
+
+            <select asp-for="NewClassId"
+                    asp-items="Model.ClassOptions"
+                    class="form-select">
+                <option value="0">
+                    -- Chọn lớp mới --
+                </option>
+            </select>
+
+            <span asp-validation-for="NewClassId"
+                  class="text-danger"></span>
+        </div>
+
+        @if (Model.ClassOptions.Any())
+        {
+            <button type="submit"
+                    class="btn btn-success"
+                    onclick="return confirm('Xác nhận chuyển lớp cho học sinh này?')">
+                Xác nhận chuyển lớp
+            </button>
+        }
+        else
+        {
+            <div class="alert alert-warning">
+                Không có lớp khác cùng khối và năm học
+                để chuyển đến.
+            </div>
+        }
+
+        <a asp-controller="Students"
+           asp-action="Details"
+           asp-route-id="@Model.StudentId"
+           class="btn btn-secondary">
+            Hủy
+        </a>
+
+    </form>
+</div>

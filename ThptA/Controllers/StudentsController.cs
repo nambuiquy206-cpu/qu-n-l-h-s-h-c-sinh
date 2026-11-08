@@ -666,5 +666,179 @@ namespace ThptA.Controllers
                 nameof(Details), new { id });
         }
 
+        // Admin mở trang chuyển lớp
+        [HttpGet]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> TransferClass(int id)
+        {
+            if (id <= 0)
+                return NotFound();
+
+            var student = await _db.Students
+                .AsNoTracking()
+                .Include(s => s.SchoolClass)
+                    .ThenInclude(c => c!.AcademicYear)
+                .FirstOrDefaultAsync(s => s.Id == id);
+
+            if (student == null ||
+                student.SchoolClass == null)
+                return NotFound();
+
+            var model = new StudentTransferVm
+            {
+                StudentId = student.Id,
+                StudentCode = student.Code,
+                StudentName = student.FullName,
+                CurrentClassName = student.SchoolClass.Name,
+                AcademicYearCode =
+                    student.SchoolClass.AcademicYear?.Code ?? "",
+                RowVersion =
+                    Convert.ToBase64String(student.RowVersion)
+            };
+
+            await LoadTransferClassesAsync(
+                model, student.SchoolClass);
+
+            return View(model);
+        }
+
+        // Admin lưu việc chuyển lớp
+        [HttpPost]
+        [Authorize(Roles = "Admin")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> TransferClass(
+            int id, StudentTransferVm model)
+        {
+            if (id <= 0 || id != model.StudentId)
+                return BadRequest();
+
+            var student = await _db.Students
+                .Include(s => s.SchoolClass)
+                    .ThenInclude(c => c!.AcademicYear)
+                .FirstOrDefaultAsync(s => s.Id == id);
+
+            if (student == null ||
+                student.SchoolClass == null)
+                return NotFound();
+
+            var oldClass = student.SchoolClass;
+
+            // Nạp lại thông tin từ database
+            model.StudentCode = student.Code;
+            model.StudentName = student.FullName;
+            model.CurrentClassName = oldClass.Name;
+            model.AcademicYearCode =
+                oldClass.AcademicYear?.Code ?? "";
+
+            // Chỉ cho chuyển sang lớp cùng khối, cùng năm
+            var newClass = await _db.SchoolClasses
+                .AsNoTracking()
+                .FirstOrDefaultAsync(c =>
+                    c.Id == model.NewClassId &&
+                    c.Id != oldClass.Id &&
+                    c.Grade == oldClass.Grade &&
+                    c.AcademicYearId == oldClass.AcademicYearId);
+
+            if (newClass == null)
+            {
+                ModelState.AddModelError(
+                    nameof(model.NewClassId),
+                    "Lớp mới không hợp lệ. " +
+                    "Chỉ được chuyển trong cùng khối và năm học.");
+            }
+
+            // Kiểm tra phiên bản chống sửa đồng thời
+            byte[] originalVersion = Array.Empty<byte>();
+
+            try
+            {
+                originalVersion =
+                    Convert.FromBase64String(model.RowVersion);
+
+                if (originalVersion.Length != 8)
+                    throw new FormatException();
+            }
+            catch (FormatException)
+            {
+                ModelState.AddModelError(
+                    "",
+                    "Phiên bản hồ sơ không hợp lệ. " +
+                    "Vui lòng mở lại trang.");
+            }
+
+            if (!ModelState.IsValid)
+            {
+                await LoadTransferClassesAsync(model, oldClass);
+                return View(model);
+            }
+
+            var actorId = _userManager.GetUserId(User);
+
+            if (string.IsNullOrEmpty(actorId))
+                return Challenge();
+
+            // Kiểm tra thay đổi đồng thời
+            _db.Entry(student)
+                .Property(s => s.RowVersion)
+                .OriginalValue = originalVersion;
+
+            // Chuyển học sinh sang lớp mới
+            student.ClassId = newClass!.Id;
+            student.UpdatedAtUtc = DateTime.UtcNow;
+
+            // Ghi nhật ký chuyển lớp
+            _db.AuditLogs.Add(new AuditLog
+            {
+                ActorId = actorId,
+                Action = "TRANSFER_STUDENT",
+                Target = $"{student.Code}: " +
+                         $"{oldClass.Name} -> {newClass.Name}",
+                AtUtc = DateTime.UtcNow
+            });
+
+            try
+            {
+                await _db.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                ModelState.AddModelError(
+                    "",
+                    "Hồ sơ đã được thay đổi bởi người khác. " +
+                    "Vui lòng tải lại trang.");
+
+                await LoadTransferClassesAsync(model, oldClass);
+                return View(model);
+            }
+
+            TempData["Success"] =
+                $"Đã chuyển {student.Code} sang lớp {newClass.Name}.";
+
+            return RedirectToAction(
+                nameof(Details),
+                new { id = student.Id });
+        }
+
+        // Danh sách lớp đích hợp lệ
+        private async Task LoadTransferClassesAsync(
+            StudentTransferVm model,
+            SchoolClass currentClass)
+        {
+            model.ClassOptions = await _db.SchoolClasses
+                .AsNoTracking()
+                .Where(c =>
+                    c.Id != currentClass.Id &&
+                    c.Grade == currentClass.Grade &&
+                    c.AcademicYearId ==
+                        currentClass.AcademicYearId)
+                .OrderBy(c => c.Name)
+                .Select(c => new SelectListItem
+                {
+                    Value = c.Id.ToString(),
+                    Text = c.Name
+                })
+                .ToListAsync();
+        }
+
     }
 }
