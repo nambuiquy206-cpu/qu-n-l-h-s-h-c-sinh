@@ -1,0 +1,95 @@
+﻿@model ThptA.ViewModels.FeePaymentCreateVm
+
+@{
+    ViewData["Title"] = "Ghi nhận đóng tiền";
+}
+
+<div class="container mt-4">
+
+    <h2 class="mb-4">Ghi nhận tiền học sinh đã đóng</h2>
+
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            Thông tin khoản thu
+        </div>
+
+        <div class="card-body">
+            <p>
+                <strong>Học sinh:</strong>
+                @Model.StudentDisplay
+            </p>
+
+            <p>
+                <strong>Khoản thu:</strong>
+                @Model.FeeTitle
+            </p>
+
+            <p>
+                <strong>Phải đóng:</strong>
+                @Model.AmountDue.ToString("N0") đ
+            </p>
+
+            <p>
+                <strong>Đã đóng:</strong>
+                @Model.PaidAmount.ToString("N0") đ
+            </p>
+
+            <p class="text-danger">
+                <strong>Còn thiếu:</strong>
+                @Model.RemainingAmount.ToString("N0") đ
+            </p>
+        </div>
+    </div>
+
+    <form asp-controller="StudentFees"
+          asp-action="RecordPayment"
+          method="post">
+
+        <input asp-for="StudentFeeId" type="hidden" />
+
+        <div asp-validation-summary="All"
+             class="text-danger"></div>
+
+        <div class="mb-3">
+            <label class="form-label">
+                Số tiền đã đóng (VNĐ)
+            </label>
+
+            <input asp-for="Amount"
+                   type="number"
+                   min="1"
+                   step="1"
+                   class="form-control"
+                   placeholder="Ví dụ: 400000" />
+
+            <span asp-validation-for="Amount"
+                  class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">
+                Ghi chú
+            </label>
+
+            <textarea asp-for="Note"
+                      class="form-control"
+                      rows="3"
+                      placeholder="Ví dụ: Đóng tiền lần 1">
+            </textarea>
+        </div>
+
+        <button type="submit"
+                class="btn btn-success"
+                onclick="return confirm('Xác nhận ghi nhận số tiền này?')">
+            Xác nhận đã đóng
+        </button>
+
+        <a asp-controller="StudentFees"
+           asp-action="Index"
+           asp-route-studentId="@Model.StudentId"
+           class="btn btn-secondary">
+            Quay lại
+        </a>
+    </form>
+
+</div>

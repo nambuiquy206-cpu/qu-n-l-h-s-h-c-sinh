@@ -31,6 +31,10 @@ namespace ThptA.Data
 
         public DbSet<TimetableEntry> TimetableEntries { get; set; } = null!;
 
+        public DbSet<StudentFee> StudentFees { get; set; } = null!;
+
+        public DbSet<FeePayment> FeePayments { get; set; } = null!;
+
         protected override void OnModelCreating(
             ModelBuilder builder)
         {
@@ -130,6 +134,28 @@ namespace ThptA.Data
                 .WithMany()
                 .HasForeignKey(x => x.ActorId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            // 6. Liên kết khoản thu với học sinh
+            builder.Entity<StudentFee>()
+                .HasOne(f => f.Student)
+                .WithMany()
+                .HasForeignKey(f => f.StudentId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // 7. Liên kết khoản thu với năm học
+            builder.Entity<StudentFee>()
+                .HasOne(f => f.AcademicYear)
+                .WithMany()
+                .HasForeignKey(f => f.AcademicYearId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // 8. Liên kết lịch sử đóng tiền với khoản thu
+            builder.Entity<FeePayment>()
+                .HasOne(p => p.StudentFee)
+                .WithMany(f => f.Payments)
+                .HasForeignKey(p => p.StudentFeeId)
+                .OnDelete(DeleteBehavior.Restrict);
+
         }
     }
 }

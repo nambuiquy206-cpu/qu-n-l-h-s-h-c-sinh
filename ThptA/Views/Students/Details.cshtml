@@ -6,14 +6,45 @@
 
 <div class="container mt-4">
 
-    <h2>Chi tiết hồ sơ học sinh</h2>
+    <h2 class="mb-4">Chi tiết hồ sơ học sinh</h2>
 
+    <!-- THÔNG BÁO -->
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success">
+            @TempData["Success"]
+        </div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger">
+            @TempData["Error"]
+        </div>
+    }
+
+    <!-- THEO DÕI KHOẢN THU -->
+    @if (User.IsInRole("Admin"))
+    {
+        <div class="mb-3">
+            <a asp-controller="StudentFees"
+               asp-action="Index"
+               asp-route-studentId="@Model.Id"
+               class="btn btn-outline-primary">
+                Theo dõi khoản thu
+            </a>
+        </div>
+    }
+
+    <!-- THÔNG TIN HỌC SINH -->
     <div class="card mb-4">
+
         <div class="card-header bg-primary text-white">
             Thông tin học sinh
         </div>
 
         <div class="card-body">
+
             <p>
                 <strong>Mã học sinh:</strong>
                 @Model.Code
@@ -52,18 +83,33 @@
 
             <p>
                 <strong>Trạng thái:</strong>
-                @(Model.Status == "Active"
-                    ? "Đang học" : "Ngừng học")
+
+                @if (Model.Status == "Active")
+                {
+                    <span class="badge bg-success">
+                        Đang học
+                    </span>
+                }
+                else
+                {
+                    <span class="badge bg-secondary">
+                        Ngừng học
+                    </span>
+                }
             </p>
+
         </div>
     </div>
 
+    <!-- NGƯỜI LIÊN HỆ CHÍNH -->
     <div class="card mb-4">
+
         <div class="card-header bg-secondary text-white">
             Người liên hệ chính
         </div>
 
         <div class="card-body">
+
             @if (Model.PrimaryContact != null)
             {
                 <p>
@@ -85,94 +131,90 @@
             {
                 <p>Chưa có thông tin người liên hệ.</p>
             }
+
         </div>
     </div>
 
-    <a asp-controller="Students"
-       asp-action="Index"
-       class="btn btn-secondary">
-        Quay lại danh sách
+    <!-- KHU VỰC NÚT THAO TÁC -->
+    <div class="d-flex flex-wrap align-items-center gap-2 mt-4 mb-4">
 
+        <!-- Quay lại danh sách -->
+        <a asp-controller="Students"
+           asp-action="Index"
+           class="btn btn-secondary">
+            Quay lại danh sách
+        </a>
+
+        <!-- Đổi trạng thái: chỉ Admin -->
+        @if (User.IsInRole("Admin"))
+        {
+            <form asp-controller="Students"
+                  asp-action="ChangeStatus"
+                  method="post"
+                  class="m-0">
+
+                <input type="hidden"
+                       name="id"
+                       value="@Model.Id" />
+
+                @if (Model.Status == "Active")
+                {
+                    <input type="hidden"
+                           name="status"
+                           value="Inactive" />
+
+                    <button type="submit"
+                            class="btn btn-danger"
+                            onclick="return confirm('Chuyển học sinh sang trạng thái Ngừng học?')">
+                        Chuyển sang Ngừng học
+                    </button>
+                }
+                else
+                {
+                    <input type="hidden"
+                           name="status"
+                           value="Active" />
+
+                    <button type="submit"
+                            class="btn btn-success"
+                            onclick="return confirm('Chuyển học sinh sang trạng thái Đang học?')">
+                        Chuyển sang Đang học
+                    </button>
+                }
+
+            </form>
+        }
+
+        <!-- Xem thời khóa biểu -->
+        @if (Model.SchoolClass != null)
+        {
+            <a asp-controller="Timetables"
+               asp-action="Index"
+               asp-route-schoolClassId="@Model.ClassId"
+               class="btn btn-info">
+                Xem thời khóa biểu lớp
+            </a>
+        }
+
+        <!-- Chuyển lớp: chỉ Admin -->
+        @if (User.IsInRole("Admin"))
+        {
+            <a asp-controller="Students"
+               asp-action="TransferClass"
+               asp-route-id="@Model.Id"
+               class="btn btn-primary">
+                Chuyển lớp
+            </a>
+        }
+
+        <!-- Chỉnh sửa hồ sơ -->
         <a asp-controller="Students"
            asp-action="Edit"
            asp-route-id="@Model.Id"
-           class="btn btn-warning me-2">
-
-            @if (TempData["Success"] != null)
-            {
-                <div class="alert alert-success">
-                    @TempData["Success"]
-                </div>
-            }
-
-            @if (TempData["Error"] != null)
-            {
-                <div class="alert alert-danger">
-                    @TempData["Error"]
-                </div>
-            }
-
-            @if (User.IsInRole("Admin"))
-            {
-                <form asp-controller="Students"
-                      asp-action="ChangeStatus"
-                      method="post"
-                      class="mb-3">
-
-                    <input type="hidden"
-                           name="id"
-                           value="@Model.Id" />
-
-                    @if (Model.Status == "Active")
-                    {
-                        <input type="hidden"
-                               name="status"
-                               value="Inactive" />
-
-                        <button type="submit"
-                                class="btn btn-danger"
-                                onclick="return confirm('Chuyển học sinh sang trạng thái Ngừng học?')">
-                            Chuyển sang Ngừng học
-                        </button>
-                    }
-                    else
-                    {
-                        <input type="hidden"
-                               name="status"
-                               value="Active" />
-
-                        <button type="submit"
-                                class="btn btn-success"
-                                onclick="return confirm('Chuyển học sinh sang trạng thái Đang học?')">
-                            Chuyển sang Đang học
-                        </button>
-                    }
-                </form>
-            }
-
-            @if (Model.SchoolClass != null)
-            {
-                <a asp-controller="Timetables"
-                   asp-action="Index"
-                   asp-route-schoolClassId="@Model.ClassId"
-                   class="btn btn-info me-2">
-                    Xem thời khóa biểu lớp
-                </a>
-            }
-
-            @if (User.IsInRole("Admin"))
-            {
-                <a asp-controller="Students"
-                   asp-action="TransferClass"
-                   asp-route-id="@Model.Id"
-                   class="btn btn-primary me-2">
-                    Chuyển lớp
-                </a>
-            }
-
-           Chỉnh sửa hồ sơ
+           class="btn btn-warning">
+            Chỉnh sửa hồ sơ
         </a>
 
-    </a>
+    </div>
 
 </div>

@@ -1,0 +1,121 @@
+﻿@model List<ThptA.Models.StudentFee>
+
+@{
+    ViewData["Title"] = "Khoản thu học sinh";
+}
+
+<div class="container mt-4">
+
+    <h2>Quản lý khoản thu học sinh</h2>
+
+    <p>
+        <strong>Học sinh:</strong>
+        @ViewBag.StudentCode - @ViewBag.StudentName
+    </p>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success">
+            @TempData["Success"]
+        </div>
+    }
+
+    <a asp-action="Create"
+       asp-route-studentId="@ViewBag.StudentId"
+       class="btn btn-primary mb-3">
+        + Tạo khoản thu
+    </a>
+
+    <div class="table-responsive">
+        <table class="table table-bordered table-striped">
+
+            <thead class="table-dark">
+                <tr>
+                    <th>Khoản thu</th>
+                    <th>Năm học</th>
+                    <th>Phải đóng</th>
+                    <th>Đã đóng</th>
+                    <th>Còn thiếu</th>
+                    <th>Hạn đóng</th>
+                    <th>Tình trạng</th>
+                    <th>Thao tác</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                @foreach (var fee in Model)
+                {
+                    var paid = fee.Payments.Sum(p => p.Amount);
+                    var remaining = fee.AmountDue - paid;
+
+                    <tr>
+                        <td>@fee.Title</td>
+                        <td>@fee.AcademicYear.Code</td>
+
+                        <td>@fee.AmountDue.ToString("N0") đ</td>
+                        <td>@paid.ToString("N0") đ</td>
+                        <td>@remaining.ToString("N0") đ</td>
+
+                        <td>
+                            @fee.DueDate.ToString("dd/MM/yyyy")
+                        </td>
+
+                        <td>
+                            @if (paid == 0)
+                            {
+                                <span class="badge bg-danger">
+                                    Chưa đóng
+                                </span>
+                            }
+                            else if (paid < fee.AmountDue)
+                            {
+                                <span class="badge bg-warning text-dark">
+                                    Đóng một phần
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-success">
+                                    Đã đóng đủ
+                                </span>
+                            }
+                        </td>
+                        <td>
+                            @if (remaining > 0)
+                            {
+                                <a asp-controller="StudentFees"
+                                   asp-action="RecordPayment"
+                                   asp-route-studentFeeId="@fee.Id"
+                                   class="btn btn-success btn-sm">
+                                    Ghi nhận đóng tiền
+                                </a>
+                            }
+                            else
+                            {
+                                <span class="badge bg-success">
+                                    Đã hoàn tất
+                                </span>
+                            }
+                        </td>
+
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info">
+            Học sinh chưa có khoản thu nào.
+        </div>
+    }
+
+    <a asp-controller="Students"
+       asp-action="Details"
+       asp-route-id="@ViewBag.StudentId"
+       class="btn btn-secondary">
+        Quay lại hồ sơ
+    </a>
+
+</div>

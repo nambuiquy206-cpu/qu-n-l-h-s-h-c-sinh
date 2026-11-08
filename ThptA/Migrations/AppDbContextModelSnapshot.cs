@@ -290,6 +290,39 @@ namespace ThptA.Migrations
                     b.ToTable("AuditLogs");
                 });
 
+            modelBuilder.Entity("ThptA.Models.FeePayment", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("Amount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(250)
+                        .HasColumnType("nvarchar(250)");
+
+                    b.Property<DateTime>("PaidAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("RecordedById")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("StudentFeeId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("StudentFeeId");
+
+                    b.ToTable("FeePayments");
+                });
+
             modelBuilder.Entity("ThptA.Models.PrimaryContact", b =>
                 {
                     b.Property<int>("StudentId")
@@ -423,6 +456,45 @@ namespace ThptA.Migrations
                         });
                 });
 
+            modelBuilder.Entity("ThptA.Models.StudentFee", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("AcademicYearId")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("AmountDue")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("DueDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("StudentId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("nvarchar(120)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AcademicYearId");
+
+                    b.HasIndex("StudentId", "AcademicYearId", "Title")
+                        .IsUnique();
+
+                    b.ToTable("StudentFees");
+                });
+
             modelBuilder.Entity("ThptA.Models.TimetableEntry", b =>
                 {
                     b.Property<int>("Id")
@@ -523,6 +595,17 @@ namespace ThptA.Migrations
                     b.Navigation("Actor");
                 });
 
+            modelBuilder.Entity("ThptA.Models.FeePayment", b =>
+                {
+                    b.HasOne("ThptA.Models.StudentFee", "StudentFee")
+                        .WithMany("Payments")
+                        .HasForeignKey("StudentFeeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("StudentFee");
+                });
+
             modelBuilder.Entity("ThptA.Models.PrimaryContact", b =>
                 {
                     b.HasOne("ThptA.Models.Student", "Student")
@@ -563,6 +646,25 @@ namespace ThptA.Migrations
                     b.Navigation("SchoolClass");
                 });
 
+            modelBuilder.Entity("ThptA.Models.StudentFee", b =>
+                {
+                    b.HasOne("ThptA.Models.AcademicYear", "AcademicYear")
+                        .WithMany()
+                        .HasForeignKey("AcademicYearId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("ThptA.Models.Student", "Student")
+                        .WithMany()
+                        .HasForeignKey("StudentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("AcademicYear");
+
+                    b.Navigation("Student");
+                });
+
             modelBuilder.Entity("ThptA.Models.TimetableEntry", b =>
                 {
                     b.HasOne("ThptA.Models.SchoolClass", "SchoolClass")
@@ -582,6 +684,11 @@ namespace ThptA.Migrations
             modelBuilder.Entity("ThptA.Models.Student", b =>
                 {
                     b.Navigation("PrimaryContact");
+                });
+
+            modelBuilder.Entity("ThptA.Models.StudentFee", b =>
+                {
+                    b.Navigation("Payments");
                 });
 #pragma warning restore 612, 618
         }

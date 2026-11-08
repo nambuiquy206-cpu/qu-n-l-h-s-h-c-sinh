@@ -1,0 +1,84 @@
+﻿@model ThptA.ViewModels.StudentFeeCreateVm
+
+@{
+    ViewData["Title"] = "Tạo khoản thu";
+}
+
+<div class="container mt-4">
+
+    <h2 class="mb-4">Tạo khoản thu học sinh</h2>
+
+    <div class="alert alert-info">
+        <strong>Học sinh:</strong>
+        @Model.StudentDisplay
+
+        <div>
+            <strong>Năm học:</strong>
+            @Model.AcademicYearCode
+        </div>
+    </div>
+
+    <form asp-controller="StudentFees"
+          asp-action="Create"
+          method="post">
+
+        <input asp-for="StudentId" type="hidden" />
+
+        <div asp-validation-summary="All"
+             class="text-danger"></div>
+
+        <div class="mb-3">
+            <label class="form-label">
+                Tên khoản thu
+            </label>
+
+            <input asp-for="Title"
+                   class="form-control"
+                   placeholder="Ví dụ: Tiền học tháng 11" />
+
+            <span asp-validation-for="Title"
+                  class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">
+                Số tiền phải đóng (VNĐ)
+            </label>
+
+            <input asp-for="AmountDue"
+                   type="number"
+                   min="1"
+                   step="1"
+                   class="form-control" />
+
+            <span asp-validation-for="AmountDue"
+                  class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">
+                Hạn đóng tiền
+            </label>
+
+            <input asp-for="DueDate"
+                   type="date"
+                   class="form-control" />
+
+            <span asp-validation-for="DueDate"
+                  class="text-danger"></span>
+        </div>
+
+        <button type="submit"
+                class="btn btn-success">
+            Lưu khoản thu
+        </button>
+
+        <a asp-controller="StudentFees"
+           asp-action="Index"
+           asp-route-studentId="@Model.StudentId"
+           class="btn btn-secondary">
+            Hủy
+        </a>
+    </form>
+
+</div>
