@@ -105,5 +105,106 @@ namespace ThptA.Controllers
 
             return RedirectToAction(nameof(Index));
         }
+
+        // Hiển thị trang sửa họ tên giáo viên
+        [HttpGet]
+        public async Task<IActionResult> Edit(string id)
+        {
+            if (string.IsNullOrWhiteSpace(id))
+                return NotFound();
+
+            var teacher = await _userManager.FindByIdAsync(id);
+
+            if (teacher == null ||
+                !await _userManager.IsInRoleAsync(teacher, "Teacher"))
+            {
+                return NotFound();
+            }
+
+            var model = new TeacherEditVm
+            {
+                Id = teacher.Id,
+                FullName = teacher.FullName
+            };
+
+            return View(model);
+        }
+
+        // Lưu họ tên mới
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(TeacherEditVm model)
+        {
+            if (!ModelState.IsValid)
+                return View(model);
+
+            var teacher = await _userManager.FindByIdAsync(model.Id);
+
+            if (teacher == null ||
+                !await _userManager.IsInRoleAsync(teacher, "Teacher"))
+            {
+                return NotFound();
+            }
+
+            teacher.FullName = model.FullName.Trim();
+
+            var result = await _userManager.UpdateAsync(teacher);
+
+            if (!result.Succeeded)
+            {
+                foreach (var error in result.Errors)
+                    ModelState.AddModelError("", error.Description);
+
+                return View(model);
+            }
+
+            TempData["Success"] = "Cập nhật họ tên thành công.";
+
+            return RedirectToAction(nameof(Index));
+        }
+
+        // Khóa hoặc mở khóa tài khoản giáo viên
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> SetStatus(
+            string id, bool activate)
+        {
+            if (string.IsNullOrWhiteSpace(id))
+                return NotFound();
+
+            var teacher = await _userManager.FindByIdAsync(id);
+
+            // Chỉ cho phép thay đổi tài khoản Teacher
+            if (teacher == null ||
+                !await _userManager.IsInRoleAsync(teacher, "Teacher"))
+            {
+                return NotFound();
+            }
+
+            if (teacher.IsActive == activate)
+                return RedirectToAction(nameof(Index));
+
+            teacher.IsActive = activate;
+
+            // Lưu trạng thái và đổi SecurityStamp.
+            // Cookie cũ sẽ mất hiệu lực khi được xác thực lại.
+            var result = await _userManager
+                .UpdateSecurityStampAsync(teacher);
+
+            if (!result.Succeeded)
+            {
+                TempData["Error"] =
+                    "Không thể thay đổi trạng thái tài khoản.";
+
+                return RedirectToAction(nameof(Index));
+            }
+
+            TempData["Success"] = activate
+                ? "Đã mở khóa tài khoản giáo viên."
+                : "Đã khóa tài khoản giáo viên.";
+
+            return RedirectToAction(nameof(Index));
+        }
+
     }
 }

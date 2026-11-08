@@ -5,6 +5,7 @@
 }
 
 <div class="container mt-4">
+
     <h2>Quản lý tài khoản giáo viên chủ nhiệm</h2>
 
     @if (TempData["Success"] != null)
@@ -14,8 +15,14 @@
         </div>
     }
 
-    <a asp-controller="AdminAccounts"
-       asp-action="Create"
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger">
+            @TempData["Error"]
+        </div>
+    }
+
+    <a asp-action="Create"
        class="btn btn-primary mb-3">
         + Thêm tài khoản giáo viên
     </a>
@@ -24,8 +31,9 @@
         <thead class="table-dark">
             <tr>
                 <th>Tên đăng nhập</th>
-                <th>Họ tên giáo viên</th>
+                <th>Họ tên</th>
                 <th>Trạng thái</th>
+                <th>Thao tác</th>
             </tr>
         </thead>
 
@@ -34,7 +42,9 @@
             {
                 <tr>
                     <td>@teacher.UserName</td>
+
                     <td>@teacher.FullName</td>
+
                     <td>
                         @if (teacher.IsActive)
                         {
@@ -48,6 +58,44 @@
                                 Đã khóa
                             </span>
                         }
+                    </td>
+
+                    <td>
+                        <a asp-action="Edit"
+                           asp-route-id="@teacher.Id"
+                           class="btn btn-warning btn-sm">
+                            Sửa tên
+                        </a>
+
+                        <form asp-action="SetStatus"
+                              method="post"
+                              class="d-inline">
+
+                            <input type="hidden"
+                                   name="id"
+                                   value="@teacher.Id" />
+
+                            <input type="hidden"
+                                   name="activate"
+                                   value="@(!teacher.IsActive)" />
+
+                            @if (teacher.IsActive)
+                            {
+                                <button type="submit"
+                                        class="btn btn-danger btn-sm"
+                                        onclick="return confirm('Khóa tài khoản này?')">
+                                    Khóa
+                                </button>
+                            }
+                            else
+                            {
+                                <button type="submit"
+                                        class="btn btn-success btn-sm"
+                                        onclick="return confirm('Mở khóa tài khoản này?')">
+                                    Mở khóa
+                                </button>
+                            }
+                        </form>
                     </td>
                 </tr>
             }

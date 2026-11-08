@@ -1,0 +1,45 @@
+﻿@model ThptA.ViewModels.TeacherEditVm
+
+@{
+    ViewData["Title"] = "Sửa thông tin giáo viên";
+}
+
+<div class="container mt-4">
+    <h2>Chỉnh sửa họ tên giáo viên</h2>
+
+    <div class="row">
+        <div class="col-md-6">
+
+            <form asp-controller="AdminAccounts"
+                  asp-action="Edit"
+                  method="post">
+
+                <input asp-for="Id" type="hidden" />
+
+                <div asp-validation-summary="All"
+                     class="text-danger"></div>
+
+                <div class="mb-3">
+                    <label asp-for="FullName"
+                           class="form-label">
+                        Họ tên giáo viên
+                    </label>
+
+                    <input asp-for="FullName"
+                           class="form-control" />
+                </div>
+
+                <button type="submit"
+                        class="btn btn-success">
+                    Lưu thay đổi
+                </button>
+
+                <a asp-action="Index"
+                   class="btn btn-secondary">
+                    Quay lại
+                </a>
+
+            </form>
+        </div>
+    </div>
+</div>

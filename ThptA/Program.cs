@@ -52,6 +52,24 @@ builder.Services.ConfigureApplicationCookie(options =>
         CookieSecurePolicy.Always;
 });
 
+
+// Kiểm tra lại SecurityStamp ở mỗi yêu cầu.
+// Phù hợp để kiểm thử yêu cầu khóa tài khoản tức thời.
+builder.Services.Configure<SecurityStampValidatorOptions>(
+    options =>
+    {
+        options.ValidationInterval = TimeSpan.Zero;
+    });
+
+builder.Services.AddAuthorization(options =>
+{
+    options.FallbackPolicy =
+        new Microsoft.AspNetCore.Authorization
+            .AuthorizationPolicyBuilder()
+            .RequireAuthenticatedUser()
+            .Build();
+});
+
 var app = builder.Build();
 
 if (args.Contains("--seed"))
