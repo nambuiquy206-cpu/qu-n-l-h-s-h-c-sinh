@@ -1,0 +1,56 @@
+﻿@model ThptA.ViewModels.SchoolClassCreateVm
+
+@{
+    ViewData["Title"] = "Thêm lớp học";
+}
+
+<div class="container mt-4">
+    <h2>Thêm lớp học mới</h2>
+
+    <form asp-controller="SchoolClasses"
+          asp-action="Create"
+          method="post">
+
+        <div asp-validation-summary="All"
+             class="text-danger"></div>
+
+        <div class="mb-3">
+            <label class="form-label">Tên lớp</label>
+
+            <input asp-for="Name"
+                   class="form-control"
+                   placeholder="Ví dụ: 10A2" />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Khối</label>
+
+            <select asp-for="Grade"
+                    class="form-select">
+                <option value="10">Khối 10</option>
+                <option value="11">Khối 11</option>
+                <option value="12">Khối 12</option>
+            </select>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Năm học</label>
+
+            <select asp-for="AcademicYearId"
+                    asp-items="Model.YearOptions"
+                    class="form-select">
+                <option value="0">-- Chọn năm học --</option>
+            </select>
+        </div>
+
+        <button type="submit"
+                class="btn btn-success">
+            Lưu lớp học
+        </button>
+
+        <a asp-action="Index"
+           class="btn btn-secondary">
+            Quay lại
+        </a>
+    </form>
+</div>

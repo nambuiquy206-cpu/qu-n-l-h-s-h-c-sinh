@@ -1,0 +1,48 @@
+﻿@model List<ThptA.Models.AcademicYear>
+
+@{
+    ViewData["Title"] = "Quản lý năm học";
+}
+
+<div class="container mt-4">
+
+    <h2>Quản lý năm học</h2>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success">
+            @TempData["Success"]
+        </div>
+    }
+
+    <a asp-action="Create"
+       class="btn btn-primary mb-3">
+        + Thêm năm học
+    </a>
+
+    <table class="table table-bordered table-striped">
+        <thead class="table-dark">
+            <tr>
+                <th>Mã năm học</th>
+                <th>Ngày bắt đầu</th>
+                <th>Ngày kết thúc</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            @foreach (var year in Model)
+            {
+                <tr>
+                    <td>@year.Code</td>
+                    <td>
+                        @year.StartDate.ToString("dd/MM/yyyy")
+                    </td>
+                    <td>
+                        @year.EndDate.ToString("dd/MM/yyyy")
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+</div>

@@ -1,0 +1,58 @@
+﻿@model ThptA.ViewModels.AcademicYearCreateVm
+
+@{
+    ViewData["Title"] = "Thêm năm học";
+}
+
+<div class="container mt-4">
+    <h2>Thêm năm học mới</h2>
+
+    <form asp-controller="AcademicYears"
+          asp-action="Create"
+          method="post">
+
+        <div asp-validation-summary="All"
+             class="text-danger"></div>
+
+        <div class="mb-3">
+            <label class="form-label">
+                Mã năm học
+            </label>
+
+            <input asp-for="Code"
+                   class="form-control"
+                   placeholder="2027-2028" />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">
+                Ngày bắt đầu
+            </label>
+
+            <input asp-for="StartDate"
+                   type="date"
+                   class="form-control" />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">
+                Ngày kết thúc
+            </label>
+
+            <input asp-for="EndDate"
+                   type="date"
+                   class="form-control" />
+        </div>
+
+        <button type="submit"
+                class="btn btn-success">
+            Lưu năm học
+        </button>
+
+        <a asp-action="Index"
+           class="btn btn-secondary">
+            Quay lại
+        </a>
+
+    </form>
+</div>

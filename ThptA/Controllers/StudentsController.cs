@@ -459,5 +459,72 @@ namespace ThptA.Controllers
                 new { id = student.Id });
         }
 
+        // Admin thay đổi trạng thái học sinh
+        [HttpPost]
+        [Authorize(Roles = "Admin")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ChangeStatus(
+            int id, string status)
+        {
+            if (id <= 0)
+                return NotFound();
+
+            // Chỉ cho phép hai trạng thái hợp lệ
+            if (status != "Active" && status != "Inactive")
+                return BadRequest();
+
+            var student = await _db.Students
+                .FirstOrDefaultAsync(s => s.Id == id);
+
+            if (student == null)
+                return NotFound();
+
+            if (student.Status == status)
+                return RedirectToAction(
+                    nameof(Details), new { id });
+
+            var actorId = _userManager.GetUserId(User);
+
+            if (string.IsNullOrEmpty(actorId))
+                return Challenge();
+
+            // Cập nhật trạng thái
+            student.Status = status;
+            student.UpdatedAtUtc = DateTime.UtcNow;
+
+            // Ghi nhật ký
+            _db.AuditLogs.Add(new AuditLog
+            {
+                ActorId = actorId,
+                Action = status == "Active"
+                    ? "ACTIVATE_STUDENT"
+                    : "DEACTIVATE_STUDENT",
+                Target = student.Code,
+                AtUtc = DateTime.UtcNow
+            });
+
+            try
+            {
+                await _db.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                TempData["Error"] =
+                    "Hồ sơ vừa được người khác thay đổi. " +
+                    "Vui lòng kiểm tra lại.";
+
+                return RedirectToAction(
+                    nameof(Details), new { id });
+            }
+
+            TempData["Success"] =
+                status == "Active"
+                    ? "Đã chuyển học sinh sang trạng thái Đang học."
+                    : "Đã chuyển học sinh sang trạng thái Ngừng học.";
+
+            return RedirectToAction(
+                nameof(Details), new { id });
+        }
+
     }
 }

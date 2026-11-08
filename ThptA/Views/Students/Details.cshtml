@@ -97,7 +97,60 @@
            asp-action="Edit"
            asp-route-id="@Model.Id"
            class="btn btn-warning me-2">
-            Chỉnh sửa hồ sơ
+
+            @if (TempData["Success"] != null)
+            {
+                <div class="alert alert-success">
+                    @TempData["Success"]
+                </div>
+            }
+
+            @if (TempData["Error"] != null)
+            {
+                <div class="alert alert-danger">
+                    @TempData["Error"]
+                </div>
+            }
+
+            @if (User.IsInRole("Admin"))
+            {
+                <form asp-controller="Students"
+                      asp-action="ChangeStatus"
+                      method="post"
+                      class="mb-3">
+
+                    <input type="hidden"
+                           name="id"
+                           value="@Model.Id" />
+
+                    @if (Model.Status == "Active")
+                    {
+                        <input type="hidden"
+                               name="status"
+                               value="Inactive" />
+
+                        <button type="submit"
+                                class="btn btn-danger"
+                                onclick="return confirm('Chuyển học sinh sang trạng thái Ngừng học?')">
+                            Chuyển sang Ngừng học
+                        </button>
+                    }
+                    else
+                    {
+                        <input type="hidden"
+                               name="status"
+                               value="Active" />
+
+                        <button type="submit"
+                                class="btn btn-success"
+                                onclick="return confirm('Chuyển học sinh sang trạng thái Đang học?')">
+                            Chuyển sang Đang học
+                        </button>
+                    }
+                </form>
+            }
+
+           Chỉnh sửa hồ sơ
         </a>
 
     </a>
